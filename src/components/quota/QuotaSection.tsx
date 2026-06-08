@@ -4,9 +4,40 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { EmptyState } from '@/components/ui/EmptyState';
+import {
+  AlertTriangleIcon,
+  ListIcon,
+  RefreshCwIcon,
+  Rows3Icon,
+} from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/shadcn-card';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { triggerHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useNotificationStore, useQuotaStore, useThemeStore } from '@/stores';
 import type { AuthFileItem, ResolvedTheme } from '@/types';
@@ -16,7 +47,6 @@ import type { QuotaStatusState } from './QuotaCard';
 import { useQuotaLoader } from './useQuotaLoader';
 import type { QuotaConfig } from './quotaConfigs';
 import { useGridColumns } from './useGridColumns';
-import { IconRefreshCw } from '@/components/ui/icons';
 import styles from '@/pages/QuotaPage.module.scss';
 
 type QuotaUpdater<T> = T | ((prev: T) => T);
@@ -171,6 +201,20 @@ export function QuotaSection<TState extends QuotaStatusState, TData>({
     void triggerHeaderRefresh();
   }, []);
 
+  const handleViewModeChange = useCallback(
+    (value: string) => {
+      if (!value) return;
+      if (value === 'all' && filteredFiles.length > MAX_SHOW_ALL_THRESHOLD) {
+        setShowTooManyWarning(true);
+        return;
+      }
+      if (value === 'paged' || value === 'all') {
+        setViewMode(value);
+      }
+    },
+    [filteredFiles.length]
+  );
+
   useEffect(() => {
     const wasLoading = prevFilesLoadingRef.current;
     prevFilesLoadingRef.current = loading;
@@ -237,13 +281,15 @@ export function QuotaSection<TState extends QuotaStatusState, TData>({
     [config, disabled, quota, setQuota, showNotification, t]
   );
 
+  const sectionTitle = t(`${config.i18nPrefix}.title`);
+  const refreshLabel = t('quota_management.refresh_section_credentials', {
+    provider: sectionTitle,
+  });
   const titleNode = (
     <div className={styles.titleWrapper}>
-      <span>{t(`${config.i18nPrefix}.title`)}</span>
+      <span className={styles.sectionTitleText}>{sectionTitle}</span>
       {filteredFiles.length > 0 && (
-        <span className={styles.countBadge}>
-          {filteredFiles.length}
-        </span>
+        <Badge variant="secondary">{filteredFiles.length}</Badge>
       )}
     </div>
   );
@@ -251,117 +297,139 @@ export function QuotaSection<TState extends QuotaStatusState, TData>({
   const isRefreshing = sectionLoading || loading;
 
   return (
-    <Card
-      title={titleNode}
-      extra={
-        <div className={styles.headerActions}>
-          <div className={styles.viewModeToggle}>
-            <Button
-              variant="secondary"
+    <Card className={styles.quotaSectionCard}>
+      <CardHeader className={styles.quotaSectionHeader}>
+        <CardTitle>{titleNode}</CardTitle>
+        <CardAction>
+          <div className={styles.headerActions}>
+            <ToggleGroup
+              type="single"
+              value={effectiveViewMode}
+              onValueChange={handleViewModeChange}
+              variant="outline"
               size="sm"
-              className={`${styles.viewModeButton} ${
-                effectiveViewMode === 'paged' ? styles.viewModeButtonActive : ''
-              }`}
-              onClick={() => setViewMode('paged')}
+              spacing={0}
+              className={styles.viewModeToggle}
             >
-              {t('auth_files.view_mode_paged')}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              className={`${styles.viewModeButton} ${
-                effectiveViewMode === 'all' ? styles.viewModeButtonActive : ''
-              }`}
-              onClick={() => {
-                if (filteredFiles.length > MAX_SHOW_ALL_THRESHOLD) {
-                  setShowTooManyWarning(true);
-                } else {
-                  setViewMode('all');
-                }
-              }}
-            >
-              {t('auth_files.view_mode_all')}
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem
+                    value="paged"
+                    aria-label={t('auth_files.view_mode_paged')}
+                    title={t('auth_files.view_mode_paged')}
+                    disabled={filteredFiles.length === 0}
+                  >
+                    <Rows3Icon data-icon="inline-start" />
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>{t('auth_files.view_mode_paged')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem
+                    value="all"
+                    aria-label={t('auth_files.view_mode_all')}
+                    title={t('auth_files.view_mode_all')}
+                    disabled={filteredFiles.length === 0}
+                  >
+                    <ListIcon data-icon="inline-start" />
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>{t('auth_files.view_mode_all')}</TooltipContent>
+              </Tooltip>
+            </ToggleGroup>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  className={styles.refreshAllButton}
+                  onClick={handleRefresh}
+                  disabled={disabled || isRefreshing}
+                  loading={isRefreshing}
+                  title={refreshLabel}
+                  aria-label={refreshLabel}
+                >
+                  {!isRefreshing && <RefreshCwIcon data-icon="inline-start" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{refreshLabel}</TooltipContent>
+            </Tooltip>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            className={styles.refreshAllButton}
-            onClick={handleRefresh}
-            disabled={disabled || isRefreshing}
-            loading={isRefreshing}
-            title={t('quota_management.refresh_all_credentials')}
-            aria-label={t('quota_management.refresh_all_credentials')}
-          >
-            {!isRefreshing && <IconRefreshCw size={16} />}
-            {t('quota_management.refresh_all_credentials')}
-          </Button>
-        </div>
-      }
-    >
-      {filteredFiles.length === 0 ? (
-        <EmptyState
-          title={t(`${config.i18nPrefix}.empty_title`)}
-          description={t(`${config.i18nPrefix}.empty_desc`)}
-        />
-      ) : (
-        <>
-          <div ref={gridRef} className={config.gridClassName}>
-            {pageItems.map((item) => (
-              <QuotaCard
-                key={item.name}
-                item={item}
-                quota={quota[item.name]}
-                resolvedTheme={resolvedTheme}
-                i18nPrefix={config.i18nPrefix}
-                cardIdleMessageKey={config.cardIdleMessageKey}
-                cardClassName={config.cardClassName}
-                defaultType={config.type}
-                canRefresh={!disabled && !item.disabled}
-                onRefresh={() => void refreshQuotaForFile(item)}
-                renderQuotaItems={config.renderQuotaItems}
-              />
-            ))}
-          </div>
-          {filteredFiles.length > pageSize && effectiveViewMode === 'paged' && (
-            <div className={styles.pagination}>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={goToPrev}
-                disabled={currentPage <= 1}
-              >
-                {t('auth_files.pagination_prev')}
-              </Button>
-              <div className={styles.pageInfo}>
-                {t('auth_files.pagination_info', {
-                  current: currentPage,
-                  total: totalPages,
-                  count: filteredFiles.length
-                })}
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={goToNext}
-                disabled={currentPage >= totalPages}
-              >
-                {t('auth_files.pagination_next')}
-              </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent className={styles.quotaSectionContent}>
+        {filteredFiles.length === 0 ? (
+          <Empty className={styles.quotaEmpty}>
+            <EmptyHeader>
+              <EmptyTitle>{t(`${config.i18nPrefix}.empty_title`)}</EmptyTitle>
+              <EmptyDescription>{t(`${config.i18nPrefix}.empty_desc`)}</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent />
+          </Empty>
+        ) : (
+          <>
+            <div ref={gridRef} className={config.gridClassName}>
+              {pageItems.map((item) => (
+                <QuotaCard
+                  key={item.name}
+                  item={item}
+                  quota={quota[item.name]}
+                  resolvedTheme={resolvedTheme}
+                  i18nPrefix={config.i18nPrefix}
+                  cardIdleMessageKey={config.cardIdleMessageKey}
+                  cardClassName={config.cardClassName}
+                  defaultType={config.type}
+                  canRefresh={!disabled && !item.disabled}
+                  onRefresh={() => void refreshQuotaForFile(item)}
+                  renderQuotaItems={config.renderQuotaItems}
+                />
+              ))}
             </div>
-          )}
-        </>
-      )}
-      {showTooManyWarning && (
-        <div className={styles.warningOverlay} onClick={() => setShowTooManyWarning(false)}>
-          <div className={styles.warningModal} onClick={(e) => e.stopPropagation()}>
-            <p>{t('auth_files.too_many_files_warning')}</p>
-            <Button variant="primary" size="sm" onClick={() => setShowTooManyWarning(false)}>
-              {t('common.confirm')}
-            </Button>
-          </div>
-        </div>
-      )}
+            {filteredFiles.length > pageSize && effectiveViewMode === 'paged' && (
+              <div className={styles.pagination}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={goToPrev}
+                  disabled={currentPage <= 1}
+                >
+                  {t('auth_files.pagination_prev')}
+                </Button>
+                <div className={styles.pageInfo}>
+                  {t('auth_files.pagination_info', {
+                    current: currentPage,
+                    total: totalPages,
+                    count: filteredFiles.length
+                  })}
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={goToNext}
+                  disabled={currentPage >= totalPages}
+                >
+                  {t('auth_files.pagination_next')}
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+      <AlertDialog open={showTooManyWarning} onOpenChange={setShowTooManyWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia>
+              <AlertTriangleIcon />
+            </AlertDialogMedia>
+            <AlertDialogTitle>{t('quota_management.too_many_title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('auth_files.too_many_files_warning')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>{t('common.confirm')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

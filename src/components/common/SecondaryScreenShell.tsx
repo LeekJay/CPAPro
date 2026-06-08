@@ -1,8 +1,8 @@
 import { forwardRef, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Button } from '@/components/ui/Button';
+import { ChevronLeftIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { IconChevronLeft } from '@/components/ui/icons';
 import { usePageTransitionLayer } from './PageTransitionLayer';
 import styles from './SecondaryScreenShell.module.scss';
 
@@ -97,7 +97,7 @@ export const SecondaryScreenShell = forwardRef<HTMLDivElement, SecondaryScreenSh
                 aria-label={resolvedBackAriaLabel}
               >
                 <span className={styles.backIcon}>
-                  <IconChevronLeft size={18} />
+                  <ChevronLeftIcon data-icon="inline-start" />
                 </span>
                 <span className={styles.backText}>{backLabel}</span>
               </Button>

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Collapsible } from '@/components/ui/Collapsible';
-import { IconCheck, IconX } from '@/components/ui/icons';
+import { CheckIcon, XIcon } from 'lucide-react';
+import { Collapsible } from '@/components/ui/collapsible';
 import {
   getProviderTotalStats,
   type ProviderRecentUsageMap,
@@ -85,12 +85,12 @@ export function ResourceDetailView({ resource, usageByProvider }: ResourceDetail
                     <span
                       className={`${styles.apiKeyEntryStat} ${styles.apiKeyEntryStatSuccess}`}
                     >
-                      <IconCheck size={12} /> {entryStats.success}
+                      <CheckIcon data-icon="inline-start" /> {entryStats.success}
                     </span>
                     <span
                       className={`${styles.apiKeyEntryStat} ${styles.apiKeyEntryStatFailure}`}
                     >
-                      <IconX size={12} /> {entryStats.failure}
+                      <XIcon data-icon="inline-start" /> {entryStats.failure}
                     </span>
                   </div>
                 </div>

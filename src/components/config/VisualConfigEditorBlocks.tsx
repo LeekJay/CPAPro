@@ -1,8 +1,16 @@
 import { memo, useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/Button';
-import { Modal } from '@/components/ui/Modal';
-import { Select } from '@/components/ui/Select';
+import { AlertCircleIcon } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/shadcn-dialog';
+import { OptionSelect as Select } from '@/components/ui/shadcn-option-select';
 import { useNotificationStore } from '@/stores';
 import styles from './VisualConfigEditor.module.scss';
 import { copyToClipboard } from '@/utils/clipboard';
@@ -329,17 +337,57 @@ export const ApiKeysCardEditor = memo(function ApiKeysCardEditor({
 
       <div className="hint">{t('config_management.visual.api_keys.hint')}</div>
 
-      <Modal
+      <Dialog
         open={modalOpen}
-        onClose={closeModal}
-        title={
-          editingApiKeyId !== null
-            ? t('config_management.visual.api_keys.edit_title')
-            : t('config_management.visual.api_keys.add_title')
-        }
-        footer={
-          <>
-            <Button variant="secondary" onClick={closeModal} disabled={disabled}>
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) closeModal();
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingApiKeyId !== null
+                ? t('config_management.visual.api_keys.edit_title')
+                : t('config_management.visual.api_keys.add_title')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="form-group">
+            <label htmlFor={apiKeyInputId}>
+              {t('config_management.visual.api_keys.input_label')}
+            </label>
+            <div className={styles.apiKeyModalInputRow}>
+              <input
+                id={apiKeyInputId}
+                className="input"
+                placeholder={t('config_management.visual.api_keys.input_placeholder')}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                disabled={disabled}
+                aria-describedby={formError ? `${apiKeyErrorId} ${apiKeyHintId}` : apiKeyHintId}
+                aria-invalid={Boolean(formError)}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleGenerate}
+                disabled={disabled}
+              >
+                {t('config_management.visual.api_keys.generate')}
+              </Button>
+            </div>
+            <div id={apiKeyHintId} className="hint">
+              {t('config_management.visual.api_keys.input_hint')}
+            </div>
+            {formError && (
+              <Alert id={apiKeyErrorId} variant="destructive">
+                <AlertCircleIcon />
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeModal} disabled={disabled}>
               {t('config_management.visual.common.cancel')}
             </Button>
             <Button onClick={handleSave} disabled={disabled}>
@@ -347,44 +395,9 @@ export const ApiKeysCardEditor = memo(function ApiKeysCardEditor({
                 ? t('config_management.visual.common.update')
                 : t('config_management.visual.common.add')}
             </Button>
-          </>
-        }
-      >
-        <div className="form-group">
-          <label htmlFor={apiKeyInputId}>
-            {t('config_management.visual.api_keys.input_label')}
-          </label>
-          <div className={styles.apiKeyModalInputRow}>
-            <input
-              id={apiKeyInputId}
-              className="input"
-              placeholder={t('config_management.visual.api_keys.input_placeholder')}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              disabled={disabled}
-              aria-describedby={formError ? `${apiKeyErrorId} ${apiKeyHintId}` : apiKeyHintId}
-              aria-invalid={Boolean(formError)}
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={handleGenerate}
-              disabled={disabled}
-            >
-              {t('config_management.visual.api_keys.generate')}
-            </Button>
-          </div>
-          <div id={apiKeyHintId} className="hint">
-            {t('config_management.visual.api_keys.input_hint')}
-          </div>
-          {formError && (
-            <div id={apiKeyErrorId} className="error-box">
-              {formError}
-            </div>
-          )}
-        </div>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 });

@@ -18,8 +18,24 @@ style.md
 node_modules
 dist
 dist-ssr
+.vite
+coverage
+playwright-report
+test-results
 *.local
+*.tsbuildinfo
+*.tmp
+*.bak
+*.orig
 skills
+.bun-cache
+.bun-tmp
+.codex-chrome*
+codex-*.png
+authfiles-*.png
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 settings.local.json

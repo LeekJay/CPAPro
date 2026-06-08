@@ -1,15 +1,4 @@
 import type { TFunction } from 'i18next';
-import iconAntigravity from '@/assets/icons/antigravity.svg';
-import iconClaude from '@/assets/icons/claude.svg';
-import iconCodex from '@/assets/icons/codex.svg';
-import iconGemini from '@/assets/icons/gemini.svg';
-import iconGrok from '@/assets/icons/grok.svg';
-import iconGrokDark from '@/assets/icons/grok-dark.svg';
-import iconIflow from '@/assets/icons/iflow.svg';
-import iconKimiDark from '@/assets/icons/kimi-dark.svg';
-import iconKimiLight from '@/assets/icons/kimi-light.svg';
-import iconQwen from '@/assets/icons/qwen.svg';
-import iconVertex from '@/assets/icons/vertex.svg';
 import type { AuthFileItem } from '@/types';
 import { parseTimestamp } from '@/utils/timestamp';
 
@@ -22,7 +11,6 @@ export type AuthFileModelItem = {
   type?: string;
   owned_by?: string;
 };
-export type AuthFileIconAsset = string | { light: string; dark: string };
 
 export type QuotaProviderType = 'antigravity' | 'claude' | 'codex' | 'gemini-cli' | 'kimi' | 'xai';
 
@@ -110,20 +98,6 @@ export const TYPE_COLORS: Record<string, TypeColorSet> = {
   },
 };
 
-export const AUTH_FILE_ICONS: Record<string, AuthFileIconAsset> = {
-  antigravity: iconAntigravity,
-  aistudio: iconGemini,
-  claude: iconClaude,
-  codex: iconCodex,
-  gemini: iconGemini,
-  'gemini-cli': iconGemini,
-  xai: { light: iconGrok, dark: iconGrokDark },
-  iflow: iconIflow,
-  kimi: { light: iconKimiLight, dark: iconKimiDark },
-  qwen: iconQwen,
-  vertex: iconVertex,
-};
-
 export const clampCardPageSize = (value: number) =>
   Math.min(MAX_CARD_PAGE_SIZE, Math.max(MIN_CARD_PAGE_SIZE, Math.round(value)));
 
@@ -165,16 +139,6 @@ export const getTypeLabel = (t: TFunction, type: string): string => {
 export const getTypeColor = (type: string, resolvedTheme: ResolvedTheme): ThemeColors => {
   const set = TYPE_COLORS[normalizeProviderKey(type)] || TYPE_COLORS.unknown;
   return resolvedTheme === 'dark' && set.dark ? set.dark : set.light;
-};
-
-export const getAuthFileIcon = (type: string, resolvedTheme: ResolvedTheme): string | null => {
-  const iconEntry = AUTH_FILE_ICONS[normalizeProviderKey(type)];
-  if (!iconEntry) return null;
-  return typeof iconEntry === 'string'
-    ? iconEntry
-    : resolvedTheme === 'dark'
-      ? iconEntry.dark
-      : iconEntry.light;
 };
 
 export const parsePriorityValue = (value: unknown): number | undefined => {

@@ -610,13 +610,11 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100vh;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-gutter: stable;
-
-  @supports (height: 100dvh) {
-    height: 100dvh;
-  }
+  background: var(--background);
 
   &.content-logs {
     overflow: hidden;
@@ -631,6 +629,7 @@
   flex-direction: column;
   gap: $spacing-lg;
   overflow-x: hidden;
+  background: var(--background);
 
   &.main-content-logs {
     flex: 1 1 auto;
@@ -774,13 +773,12 @@
 
   .content {
     height: auto;
-    min-height: 100vh;
-    overflow: visible;
+    min-height: 0;
+    overflow: hidden;
     overflow-y: auto;
 
     &.content-logs {
-      overflow: visible;
-      overflow-y: auto;
+      overflow: hidden;
       height: auto;
     }
   }

@@ -81,6 +81,34 @@
   --glass-bg: color-mix(in srgb, var(--bg-primary) 82%, transparent);
   --glass-bg-secondary: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
   --glass-border: color-mix(in srgb, var(--border-color) 60%, transparent);
+
+  // shadcn/ui tokens mapped to the app theme tokens.
+  --background: var(--bg-secondary);
+  --foreground: var(--text-primary);
+  --card: var(--bg-primary);
+  --card-foreground: var(--text-primary);
+  --popover: var(--floating-surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--primary-color);
+  --primary-foreground: var(--primary-contrast);
+  --secondary: var(--bg-tertiary);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-tertiary);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--bg-tertiary);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--error-color);
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: var(--primary-color);
+  --sidebar: var(--bg-primary);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--primary-color);
+  --sidebar-primary-foreground: var(--primary-contrast);
+  --sidebar-accent: var(--bg-tertiary);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: var(--border-color);
+  --sidebar-ring: var(--primary-color);
 }
 
 // 纯白主题
@@ -157,32 +185,32 @@
 
 // 深色主题（#191919）
 [data-theme='dark'] {
-  // 极简暖灰：深色模式（提升对比度与层级）
-  --bg-secondary: #151412; // 页面背景
-  --bg-primary: #1d1b18; // 容器/卡片背景
-  --bg-tertiary: #262320; // hover/次级背景
-  --bg-hover: #2e2a26;
-  --bg-quinary: #191714;
+  // shadcn neutral dark: content background is cold black, surfaces sit one layer above it.
+  --bg-secondary: oklch(0.145 0 0); // 页面 / content 背景
+  --bg-primary: oklch(0.205 0 0); // 卡片 / 容器
+  --bg-tertiary: oklch(0.269 0 0); // hover / muted
+  --bg-hover: oklch(0.32 0 0);
+  --bg-quinary: oklch(0.18 0 0);
   --bg-error-light: rgba(198, 87, 70, 0.18);
-  --floating-surface: #2a2723;
-  --floating-border: #4a443d;
+  --floating-surface: oklch(0.205 0 0);
+  --floating-border: oklch(1 0 0 / 10%);
   --floating-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
 
-  --text-primary: #f6f4f1;
-  --text-secondary: #c9c3bb;
-  --text-tertiary: #9c958d;
-  --text-quaternary: #6f6962;
+  --text-primary: oklch(0.985 0 0);
+  --text-secondary: oklch(0.708 0 0);
+  --text-tertiary: oklch(0.556 0 0);
+  --text-quaternary: oklch(0.439 0 0);
   --text-muted: var(--text-tertiary);
 
-  --border-color: #3a3530;
+  --border-color: oklch(1 0 0 / 10%);
   --border-secondary: var(--border-color);
-  --border-primary: #4a453f;
-  --border-hover: #5a544d;
+  --border-primary: oklch(1 0 0 / 16%);
+  --border-hover: oklch(1 0 0 / 22%);
 
-  --primary-color: #8b8680;
-  --primary-hover: #9a948e;
-  --primary-active: #a6a099;
-  --primary-contrast: #ffffff;
+  --primary-color: oklch(0.922 0 0);
+  --primary-hover: oklch(0.86 0 0);
+  --primary-active: oklch(0.78 0 0);
+  --primary-contrast: oklch(0.205 0 0);
 
   --success-color: #10b981;
   --quota-medium-color: #ffd862;

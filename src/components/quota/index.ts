@@ -4,6 +4,7 @@
 
 export { QuotaSection } from './QuotaSection';
 export { QuotaCard } from './QuotaCard';
+export { QuotaListTable } from './QuotaListTable';
 export { useQuotaLoader } from './useQuotaLoader';
 export {
   ANTIGRAVITY_CONFIG,

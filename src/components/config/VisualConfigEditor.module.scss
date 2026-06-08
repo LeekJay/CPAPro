@@ -4,32 +4,32 @@
 .visualEditor {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 
   :global(.form-group) {
-    gap: 7px;
+    gap: 6px;
     margin-bottom: 0;
   }
 
   :global(.form-group > label) {
-    color: var(--text-secondary);
+    color: var(--muted-foreground);
     font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-weight: 600;
+    letter-spacing: 0;
   }
 
   :global(.input) {
-    min-height: 42px;
+    min-height: 34px;
     border-radius: 8px;
-    background: var(--bg-secondary);
-    border-color: var(--border-color);
+    background: var(--background);
+    border-color: var(--input);
     box-shadow: none;
   }
 
   :global(.input:focus) {
-    background: var(--bg-primary);
-    border-color: var(--text-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--text-primary) 12%, transparent);
+    background: var(--background);
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 28%, transparent);
   }
 
   :global(textarea.input) {
@@ -37,7 +37,7 @@
   }
 
   :global(.hint) {
-    color: var(--text-secondary);
+    color: var(--muted-foreground);
     font-size: 12px;
     line-height: 1.55;
   }
@@ -53,9 +53,9 @@
 
   :global(.item-row) {
     border-radius: 8px;
-    padding: 12px;
+    padding: 10px;
     background: transparent;
-    border-color: var(--border-color);
+    border-color: var(--border);
   }
 
   :global(.item-row .item-meta) {
@@ -67,10 +67,10 @@
   }
 
   :global(.pill) {
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border);
     border-radius: 6px;
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--muted-foreground);
   }
 }
 
@@ -129,56 +129,20 @@
   transform: none;
 }
 
-.overview {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
-  padding: 0 0 18px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.overviewHeader {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-
-  @include mobile {
-    align-items: stretch;
-  }
-}
-
-.overviewMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.overviewPill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 9px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.overviewPillWarning {
-  color: var(--warning-text);
-  border-color: var(--warning-border);
-  background: var(--warning-bg);
-}
-
 .workspace {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
   gap: 14px;
+  align-items: start;
   min-width: 0;
 
+  @media (max-width: 1180px) {
+    grid-template-columns: minmax(156px, 188px) minmax(0, 1fr);
+  }
+
   @include mobile {
+    display: flex;
+    flex-direction: column;
     gap: 12px;
   }
 }
@@ -192,7 +156,7 @@
     z-index: 4;
     display: block;
     margin-bottom: 4px;
-    background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
+    background: var(--background);
   }
 }
 
@@ -212,52 +176,42 @@
   min-width: 0;
   width: 100%;
   padding: 9px 10px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-primary);
+  background: var(--background);
+  color: var(--foreground);
+  text-decoration: none;
   text-align: left;
 }
 
 .mobileSectionNavButtonActive {
-  border-color: var(--text-primary);
-  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
-}
-
-.mobileSectionNavIndex {
-  color: var(--text-tertiary);
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
+  background: var(--secondary);
 }
 
 .mobileSectionNavLabel {
-  color: var(--text-primary);
+  min-width: 0;
+  color: var(--foreground);
   font-size: 13px;
   font-weight: 700;
   line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mobileSectionNavBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 6px;
-  background: var(--warning-bg);
-  border: 1px solid var(--warning-border);
-  color: var(--warning-text);
-  font-size: 11px;
-  font-weight: 700;
+  margin-left: auto;
 }
 
 .sidebar {
   position: sticky;
-  top: calc(var(--header-height, 64px) + 12px);
-  z-index: 5;
-  align-self: stretch;
+  top: 0;
+  align-self: start;
   min-width: 0;
+  max-height: calc(100svh - var(--header-height, 64px) - 28px);
+  padding-right: 12px;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
 
   @include mobile {
     display: none;
@@ -265,134 +219,53 @@
 }
 
 .sidebarRail {
-  padding: 0 0 12px;
-  border-bottom: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--bg-secondary) 88%, transparent);
+  max-height: inherit;
+  overflow: auto;
+  padding: 2px 0;
+  background: transparent;
 }
 
 .navList {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   min-width: 0;
-
-  @include tablet {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .navButton {
-  @include button-reset;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  justify-content: flex-start;
+  height: 34px;
   width: 100%;
-  min-height: 48px;
-  padding: 9px 11px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
+  min-width: 0;
+  padding-inline: 8px;
+  text-decoration: none;
   text-align: left;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-
-  &:hover {
-    background: color-mix(in srgb, var(--text-primary) 5%, transparent);
-  }
-}
-
-.navButtonActive {
-  border-color: var(--text-primary);
-  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
-}
-
-.navIndex {
-  min-width: 24px;
-  padding-top: 2px;
-  color: var(--text-tertiary);
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  flex: 0 0 auto;
-}
-
-.navMain {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
-
-.navHeadingRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.navLabelWrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-}
-
-.navIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  color: var(--text-secondary);
-  flex: 0 0 auto;
 }
 
 .navLabel {
-  color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.25;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .navBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 7px;
-  border-radius: 6px;
-  background: var(--warning-bg);
-  border: 1px solid var(--warning-border);
-  color: var(--warning-text);
-  font-size: 11px;
-  font-weight: 700;
-  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .sections {
   display: flex;
-  gap: 0;
+  flex-direction: column;
+  gap: 12px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   align-items: stretch;
-  padding: 0 0 12px;
-  scroll-padding-left: 0;
-  scroll-snap-type: x mandatory;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-
-  @include mobile {
-    padding-bottom: 10px;
-  }
+  padding: 0;
 
   > * {
-    flex: 0 0 100%;
     width: 100%;
     max-width: 100%;
   }
@@ -400,8 +273,8 @@
 
 .sectionGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
 
   @include mobile {
     grid-template-columns: minmax(0, 1fr);
@@ -411,22 +284,22 @@
 .sectionStack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .divider {
   height: 1px;
-  background: var(--border-color);
+  background: var(--border);
 }
 
 .toggleRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: 10px;
   align-items: center;
-  min-height: 74px;
-  padding: 14px;
-  border: 1px solid var(--border-color);
+  min-height: 56px;
+  padding: 10px;
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: transparent;
 
@@ -443,14 +316,14 @@
 }
 
 .toggleTitle {
-  color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 700;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.25;
 }
 
 .toggleDescription {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -463,10 +336,10 @@
 }
 
 .fieldLabel {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .fieldControl {
@@ -474,7 +347,7 @@
 }
 
 .fieldHint {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -488,10 +361,10 @@
   align-items: center;
   min-height: 24px;
   padding: 0 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--bg-primary);
-  color: var(--text-secondary);
+  background: var(--card);
+  color: var(--muted-foreground);
   font-size: 11px;
   font-weight: 700;
 }
@@ -499,9 +372,9 @@
 .subsection {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--border-color);
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: transparent;
 }
@@ -514,15 +387,15 @@
 
 .subsectionTitle {
   margin: 0;
-  color: var(--text-primary);
-  font-size: 15px;
-  font-weight: 700;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
   line-height: 1.25;
 }
 
 .subsectionDescription {
   margin: 0;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -544,11 +417,11 @@
 .ruleCard {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid var(--border-color);
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--bg-secondary) 64%, transparent);
+  background: var(--background);
 }
 
 .ruleCardHeader {
@@ -560,16 +433,16 @@
 }
 
 .ruleCardTitle {
-  color: var(--text-primary);
+  color: var(--foreground);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25;
 }
 
 .blockLabel {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -579,10 +452,10 @@
 }
 
 .emptyState {
-  border: 1px dashed var(--border-color);
+  border: 1px dashed var(--border);
   border-radius: 8px;
   padding: 16px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   text-align: center;
   background: transparent;
 }
@@ -602,13 +475,13 @@
 
 .payloadRuleModelRow {
   display: grid;
-  grid-template-columns: 1fr 160px auto auto;
+  grid-template-columns: minmax(0, 1fr) 160px auto auto;
   gap: 8px;
   align-items: center;
 }
 
 .payloadRuleModelRowProtocolFirst {
-  grid-template-columns: 160px 1fr auto auto;
+  grid-template-columns: 160px minmax(0, 1fr) auto auto;
 }
 
 .payloadModelGroup {
@@ -623,7 +496,7 @@
   gap: 12px;
   margin-left: 10px;
   padding-left: 12px;
-  border-left: 2px solid var(--border-color);
+  border-left: 2px solid var(--border);
 }
 
 .payloadAdvancedGrid {
@@ -641,7 +514,7 @@
 
 .payloadRuleParamRow {
   display: grid;
-  grid-template-columns: 1fr 140px 1fr auto;
+  grid-template-columns: minmax(0, 1fr) 140px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: start;
 }
@@ -666,7 +539,7 @@
 
 .payloadFilterModelRow {
   display: grid;
-  grid-template-columns: 1fr 160px auto;
+  grid-template-columns: minmax(0, 1fr) 160px auto;
   gap: 8px;
   align-items: center;
 }
@@ -705,10 +578,6 @@
 }
 
 @include mobile {
-  .overview {
-    padding-bottom: 14px;
-  }
-
   .subsection,
   .ruleCard,
   .toggleRow {

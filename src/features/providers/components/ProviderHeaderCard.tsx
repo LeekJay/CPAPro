@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import {
-  IconLoader2,
-  IconPlus,
-  IconRefreshCw,
-} from '@/components/ui/icons';
+  PlusIcon,
+  RefreshCwIcon,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import styles from './ProviderHeaderCard.module.scss';
 
 interface ProviderHeaderCardProps {
@@ -40,55 +41,55 @@ export function ProviderHeaderCard({
           <h1 className={styles.title}>{t('providersPage.header.title')}</h1>
         </div>
         <div className={styles.actions}>
-          <button
+          <Button
             type="button"
-            className={`${styles.btn} ${styles.btnOutline}`}
+            variant="secondary"
+            size="sm"
             onClick={onRefresh}
             disabled={isFetching}
+            loading={isFetching}
             aria-label={
               isFetching
                 ? t('providersPage.actions.syncing')
                 : t('providersPage.actions.refresh')
             }
           >
-            <span className={`${styles.btnIcon} ${isFetching ? styles.spin : ''}`.trim()}>
-              {isFetching ? <IconLoader2 size={16} /> : <IconRefreshCw size={16} />}
-            </span>
+            {!isFetching && <RefreshCwIcon data-icon="inline-start" />}
             <span>
               {isFetching
                 ? t('providersPage.actions.syncing')
                 : t('providersPage.actions.refresh')}
             </span>
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={`${styles.btn} ${styles.btnPrimary}`}
+            size="sm"
             onClick={onNew}
             disabled={isNewDisabled}
           >
-            <IconPlus size={16} />
+            <PlusIcon data-icon="inline-start" />
             <span>{newLabel ?? t('providersPage.actions.new')}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className={styles.chips}>
-        <span className={`${styles.chip} ${styles.chipPrimary}`}>
+        <Badge variant="outline">
           {t('providersPage.header.activeResources', {
             active: totalActive,
             total: totalResources,
           })}
-        </span>
-        <span className={styles.chip}>
+        </Badge>
+        <Badge variant="secondary">
           {t('providersPage.header.providerFamilies', { count: providerFamilies })}
-        </span>
-        <span className={styles.chip}>
+        </Badge>
+        <Badge variant="secondary">
           {t('providersPage.header.updatedAt', { time: updatedAtLabel })}
-        </span>
+        </Badge>
         {issueCount > 0 ? (
-          <span className={`${styles.chip} ${styles.chipAmber}`}>
+          <Badge variant="destructive">
             {t('providersPage.header.issueCount', { count: issueCount })}
-          </span>
+          </Badge>
         ) : null}
       </div>
     </section>

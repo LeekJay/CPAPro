@@ -1,4 +1,6 @@
-# CLI Proxy API 管理中心
+# CPAPro
+
+CPAPro, a modern CLIProxyAPI panel.
 
 用于管理与故障排查 **CLI Proxy API** 的单文件 Web UI（React + TypeScript），通过 **Management API** 完成配置、凭据与日志等管理操作。
 
@@ -41,11 +43,11 @@ bun install --frozen-lockfile
 bun run build
 ```
 
-- 构建产物：`dist/index.html`（资源已全部内联）。
-- 在 CLI Proxy API 的发布流程里会重命名为 `management.html`。
+- 构建产物：`dist/management.html`（资源已全部内联）。
+- Release 流程会发布 `management.html`。
 - 本地预览：`bun run preview`
 
-提示：直接用 `file://` 打开 `dist/index.html` 可能遇到浏览器 CORS 限制；更稳妥的方式是用预览/静态服务器打开。
+提示：直接用 `file://` 打开 `dist/management.html` 可能遇到浏览器 CORS 限制；更稳妥的方式是用预览/静态服务器打开。
 
 ## 连接说明
 
@@ -116,7 +118,7 @@ bun run build
 
 ## 构建与发布说明
 
-- 使用 Vite 输出 **单文件 HTML**（`dist/index.html`），资源全部内联（`vite-plugin-singlefile`）。
+- 使用 Vite 输出 **单文件 HTML**（`dist/management.html`），资源全部内联（`vite-plugin-singlefile`）。
 - 打 `vX.Y.Z` 标签会触发 `.github/workflows/release.yml`，发布 `dist/management.html`。
 - 系统信息页显示的 UI 版本在构建期注入（优先使用环境变量 `VERSION`，否则使用 git tag / `package.json`）。
 
@@ -154,4 +156,4 @@ bun run type-check # tsc --noEmit
 
 ## 许可证
 
-MIT
+AGPL-3.0

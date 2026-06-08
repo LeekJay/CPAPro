@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AlertCircleIcon, RefreshCwIcon, ServerOffIcon } from 'lucide-react';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore, useNotificationStore } from '@/stores';
 import { useProviderRecentRequests } from '@/components/providers/hooks/useProviderRecentRequests';
 import { getOpenAIProviderRecentWindowStats } from '@/components/providers/utils';
@@ -331,6 +333,15 @@ export function ProvidersWorkbenchPage() {
   }
 
   if (!activeGroup) {
+    const emptyTitle = workbench.isError
+      ? t('providersPage.empty.loadFailedTitle', { defaultValue: '提供商配置加载失败' })
+      : t('providersPage.empty.noSnapshotTitle', { defaultValue: '尚未加载提供商配置' });
+    const emptyDescription = workbench.isError
+      ? workbench.errorMessage || t('notification.refresh_failed')
+      : t('providersPage.empty.noSnapshotDescription', {
+          defaultValue: '连接到后端后刷新，即可查看 Gemini、Codex、Claude、Vertex、OpenAI 兼容与 Amp CLI 配置。',
+        });
+
     return (
       <div className={styles.page}>
         <ProviderHeaderCard
@@ -343,6 +354,24 @@ export function ProvidersWorkbenchPage() {
           onNew={() => {}}
           isNewDisabled
         />
+        <section className={styles.emptyPanel}>
+          <div className={styles.emptyIcon} aria-hidden="true">
+            {workbench.isError ? <AlertCircleIcon /> : <ServerOffIcon />}
+          </div>
+          <div className={styles.emptyCopy}>
+            <h2>{emptyTitle}</h2>
+            <p>{emptyDescription}</p>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void handleRefresh()}
+            loading={workbench.isFetching}
+          >
+            <RefreshCwIcon data-icon="inline-start" />
+            {t('providersPage.actions.refresh')}
+          </Button>
+        </section>
       </div>
     );
   }

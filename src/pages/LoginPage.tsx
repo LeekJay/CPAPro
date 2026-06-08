@@ -1,18 +1,12 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
-import { IconEye, IconEyeOff } from '@/components/ui/icons';
+import { LoginForm } from '@/components/login-form';
 import { useAuthStore, useLanguageStore, useNotificationStore } from '@/stores';
 import { detectApiBaseFromLocation, normalizeApiBase } from '@/utils/connection';
-import { LANGUAGE_LABEL_KEYS, LANGUAGE_ORDER } from '@/utils/constants';
 import { isSupportedLanguage } from '@/utils/language';
 import { INLINE_LOGO_JPEG } from '@/assets/logoInline';
 import type { ApiError } from '@/types';
-import styles from './LoginPage.module.scss';
 
 /**
  * 将 API 错误转换为本地化的用户友好消息
@@ -106,14 +100,6 @@ export function LoginPage() {
   const [error, setError] = useState('');
 
   const detectedBase = useMemo(() => detectApiBaseFromLocation(), []);
-  const languageOptions = useMemo(
-    () =>
-      LANGUAGE_ORDER.map((lang) => ({
-        value: lang,
-        label: t(LANGUAGE_LABEL_KEYS[lang])
-      })),
-    [t]
-  );
   const handleLanguageChange = useCallback(
     (selectedLanguage: string) => {
       if (!isSupportedLanguage(selectedLanguage)) {
@@ -177,16 +163,6 @@ export function LoginPage() {
     }
   }, [apiBase, detectedBase, login, managementKey, navigate, rememberPassword, showNotification, t]);
 
-  const handleSubmitKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === 'Enter' && !loading) {
-        event.preventDefault();
-        handleSubmit();
-      }
-    },
-    [loading, handleSubmit]
-  );
-
   if (isAuthenticated && !autoLoading && !autoLoginSuccess) {
     const redirect = (location.state as RedirectState | null)?.from?.pathname || '/';
     return <Navigate to={redirect} replace />;
@@ -196,126 +172,126 @@ export function LoginPage() {
   const showSplash = autoLoading || autoLoginSuccess;
 
   return (
-    <div className={styles.container}>
-      {/* 左侧品牌展示区 */}
-      <div className={styles.brandPanel}>
-        <div className={styles.brandContent}>
-          <span className={styles.brandWord}>CLI</span>
-          <span className={styles.brandWord}>PROXY</span>
-          <span className={styles.brandWord}>API</span>
+    <div className="grid min-h-svh bg-background lg:grid-cols-[0.92fr_1.08fr]">
+      <div className="flex min-h-svh flex-col bg-background p-5 sm:p-8 lg:p-10">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <img src={INLINE_LOGO_JPEG} alt="CPAPro" className="size-8 rounded-lg object-cover" />
+          <span>{t('title.abbr')}</span>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-10 lg:py-12">
+          {showSplash ? (
+            <div className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
+              <img src={INLINE_LOGO_JPEG} alt="CPAPro" className="size-16 rounded-2xl object-cover" />
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-bold">{t('splash.title')}</h1>
+                <p className="text-sm text-muted-foreground">{t('splash.subtitle')}</p>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-full w-1/2 rounded-full bg-primary" />
+              </div>
+            </div>
+          ) : (
+            <div className="w-full max-w-[420px] rounded-lg border bg-card p-6 shadow-sm sm:p-7">
+              <LoginForm
+                apiBase={apiBase}
+                detectedBase={detectedBase}
+                error={error}
+                language={language}
+                loading={loading}
+                managementKey={managementKey}
+                rememberPassword={rememberPassword}
+                showCustomBase={showCustomBase}
+                showKey={showKey}
+                onApiBaseChange={setApiBase}
+                onLanguageChange={handleLanguageChange}
+                onManagementKeyChange={setManagementKey}
+                onRememberPasswordChange={setRememberPassword}
+                onShowCustomBaseChange={setShowCustomBase}
+                onToggleShowKey={() => setShowKey((prev) => !prev)}
+                onSubmit={handleSubmit}
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 右侧功能交互区 */}
-      <div className={styles.formPanel}>
-        {showSplash ? (
-          /* 启动动画 */
-          <div className={styles.splashContent}>
-            <img src={INLINE_LOGO_JPEG} alt="CPAMC" className={styles.splashLogo} />
-            <h1 className={styles.splashTitle}>{t('splash.title')}</h1>
-            <p className={styles.splashSubtitle}>{t('splash.subtitle')}</p>
-            <div className={styles.splashLoader}>
-              <div className={styles.splashLoaderBar} />
+      <div className="hidden min-h-svh border-l bg-sidebar text-sidebar-foreground lg:flex">
+        <div className="flex w-full flex-col justify-between gap-10 p-10 xl:p-12">
+          <div className="flex items-center gap-3">
+            <img src={INLINE_LOGO_JPEG} alt="CPAPro" className="size-10 rounded-lg object-cover" />
+            <div className="grid text-sm leading-tight">
+              <span className="font-semibold">{t('title.abbr')}</span>
+              <span className="text-xs text-muted-foreground">CLIProxyAPI panel</span>
             </div>
           </div>
-        ) : (
-          /* 登录表单 */
-          <div className={styles.formContent}>
-            {/* Logo */}
-            <img src={INLINE_LOGO_JPEG} alt="Logo" className={styles.logo} />
 
-            {/* 登录表单卡片 */}
-            <div className={styles.loginCard}>
-              <div className={styles.loginHeader}>
-                <div className={styles.titleRow}>
-                  <div className={styles.title}>{t('title.login')}</div>
-                  <Select
-                    className={styles.languageSelect}
-                    value={language}
-                    options={languageOptions}
-                    onChange={handleLanguageChange}
-                    fullWidth={false}
-                    ariaLabel={t('language.switch')}
-                  />
+          <div className="mx-auto w-full max-w-[620px]">
+            <div className="overflow-hidden rounded-lg border bg-background shadow-sm">
+              <div className="flex h-11 items-center gap-2 border-b bg-muted/40 px-4">
+                <div className="size-2 rounded-full bg-destructive" />
+                <div className="size-2 rounded-full bg-muted-foreground/50" />
+                <div className="size-2 rounded-full bg-primary" />
+                <div className="ml-3 h-5 w-40 rounded-md bg-muted" />
+              </div>
+              <div className="grid min-h-[360px] grid-cols-[180px_1fr]">
+                <div className="border-r bg-sidebar p-3">
+                  <div className="mb-4 flex items-center gap-2 rounded-md bg-sidebar-accent px-2 py-2">
+                    <img src={INLINE_LOGO_JPEG} alt="" className="size-7 rounded-md object-cover" />
+                    <div className="h-3 w-20 rounded-sm bg-sidebar-foreground/20" />
+                  </div>
+                  {['', '', '', '', ''].map((_, index) => (
+                    <div
+                      key={index}
+                      className="mb-2 flex h-8 items-center gap-2 rounded-md px-2"
+                    >
+                      <div className="size-4 rounded-sm bg-sidebar-foreground/15" />
+                      <div className="h-2.5 w-24 rounded-sm bg-sidebar-foreground/15" />
+                    </div>
+                  ))}
                 </div>
-                <div className={styles.subtitle}>{t('login.subtitle')}</div>
+                <div className="p-5">
+                  <div className="mb-5 flex items-center justify-between">
+                    <div>
+                      <div className="mb-2 h-5 w-36 rounded-sm bg-foreground/15" />
+                      <div className="h-3 w-52 rounded-sm bg-muted" />
+                    </div>
+                    <div className="h-8 w-24 rounded-md border bg-card" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[0, 1, 2].map((item) => (
+                      <div key={item} className="rounded-lg border bg-card p-3">
+                        <div className="mb-5 h-3 w-16 rounded-sm bg-muted" />
+                        <div className="h-7 w-20 rounded-sm bg-foreground/15" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 rounded-lg border bg-card p-4">
+                    <div className="mb-4 h-3 w-28 rounded-sm bg-muted" />
+                    <div className="flex flex-col gap-3">
+                      {[0, 1, 2, 3].map((item) => (
+                        <div key={item} className="grid grid-cols-[1fr_72px_48px] gap-3">
+                          <div className="h-3 rounded-sm bg-muted" />
+                          <div className="h-3 rounded-sm bg-muted" />
+                          <div className="h-3 rounded-sm bg-muted" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <div className={styles.connectionBox}>
-                <div className={styles.label}>{t('login.connection_current')}</div>
-                <div className={styles.value}>{apiBase || detectedBase}</div>
-                <div className={styles.hint}>{t('login.connection_auto_hint')}</div>
-              </div>
-
-              <div className={styles.toggleAdvanced}>
-                <SelectionCheckbox
-                  checked={showCustomBase}
-                  onChange={setShowCustomBase}
-                  ariaLabel={t('login.custom_connection_label')}
-                  label={t('login.custom_connection_label')}
-                  labelClassName={styles.toggleLabel}
-                />
-              </div>
-
-              {showCustomBase && (
-                <Input
-                  label={t('login.custom_connection_label')}
-                  placeholder={t('login.custom_connection_placeholder')}
-                  value={apiBase}
-                  onChange={(e) => setApiBase(e.target.value)}
-                  hint={t('login.custom_connection_hint')}
-                />
-              )}
-
-              <Input
-                autoFocus
-                label={t('login.management_key_label')}
-                placeholder={t('login.management_key_placeholder')}
-                type={showKey ? 'text' : 'password'}
-                name="cpa-management-key"
-                autoComplete="current-password"
-                value={managementKey}
-                onChange={(e) => setManagementKey(e.target.value)}
-                onKeyDown={handleSubmitKeyDown}
-                rightElement={
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => setShowKey((prev) => !prev)}
-                    aria-label={
-                      showKey
-                        ? t('login.hide_key', { defaultValue: '隐藏密钥' })
-                        : t('login.show_key', { defaultValue: '显示密钥' })
-                    }
-                    title={
-                      showKey
-                        ? t('login.hide_key', { defaultValue: '隐藏密钥' })
-                        : t('login.show_key', { defaultValue: '显示密钥' })
-                    }
-                  >
-                    {showKey ? <IconEyeOff size={16} /> : <IconEye size={16} />}
-                  </button>
-                }
-              />
-
-              <div className={styles.toggleAdvanced}>
-                <SelectionCheckbox
-                  checked={rememberPassword}
-                  onChange={setRememberPassword}
-                  ariaLabel={t('login.remember_password_label')}
-                  label={t('login.remember_password_label')}
-                  labelClassName={styles.toggleLabel}
-                />
-              </div>
-
-              <Button fullWidth onClick={handleSubmit} loading={loading}>
-                {loading ? t('login.submitting') : t('login.submit_button')}
-              </Button>
-
-              {error && <div className={styles.errorBox}>{error}</div>}
             </div>
           </div>
-        )}
+
+          <div className="max-w-xl">
+            <div className="text-4xl font-bold leading-tight tracking-normal xl:text-5xl">
+              CPAPro
+            </div>
+            <p className="mt-3 text-base text-muted-foreground">
+              CPAPro, a modern CLIProxyAPI panel.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

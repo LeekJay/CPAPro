@@ -1,29 +1,39 @@
 import {
   useCallback,
-  useEffect,
   useId,
   useMemo,
-  useRef,
-  useState,
+  type ComponentProps,
   type ComponentType,
   type ReactNode,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
+import { Link } from 'react-router-dom';
+import type { LucideIcon } from 'lucide-react';
 import {
-  IconCode,
-  IconDiamond,
-  IconKey,
-  IconSatellite,
-  IconSettings,
-  IconTimer,
-  type IconProps,
-} from '@/components/ui/icons';
+  Code2Icon,
+  DiamondIcon,
+  KeyRoundIcon,
+  SatelliteDishIcon,
+  SettingsIcon,
+  TimerIcon,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+  FieldContent,
+} from '@/components/ui/field';
+import { Input as BaseInput } from '@/components/ui/input';
+import { OptionSelect as Select } from '@/components/ui/shadcn-option-select';
+import { Switch } from '@/components/ui/switch';
 import { ConfigSection } from '@/components/config/ConfigSection';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { cn } from '@/lib/utils';
 import type {
   PayloadFilterRule,
   PayloadParamValidationErrorCode,
@@ -40,20 +50,22 @@ import {
 } from './VisualConfigEditorBlocks';
 import styles from './VisualConfigEditor.module.scss';
 
-type VisualSectionId = 'server' | 'auth' | 'system' | 'quota' | 'streaming' | 'payload';
+export type VisualSectionId = 'server' | 'auth' | 'system' | 'quota' | 'streaming' | 'payload';
 
 type VisualSection = {
   id: VisualSectionId;
   title: string;
-  icon: ComponentType<IconProps>;
+  icon: ComponentType<ComponentProps<LucideIcon>>;
   errorCount: number;
 };
 
 interface VisualConfigEditorProps {
+  activeSectionId: VisualSectionId;
   values: VisualConfigValues;
   validationErrors?: VisualConfigValidationErrors;
   hasPayloadValidationErrors?: boolean;
   disabled?: boolean;
+  pageActions?: ReactNode;
   onChange: (values: Partial<VisualConfigValues>) => void;
 }
 
@@ -75,18 +87,24 @@ type ToggleRowProps = {
 
 function ToggleRow({ title, description, checked, disabled, onChange }: ToggleRowProps) {
   return (
-    <div className={styles.toggleRow}>
-      <div className={styles.toggleCopy}>
-        <div className={styles.toggleTitle}>{title}</div>
-        {description ? <div className={styles.toggleDescription}>{description}</div> : null}
-      </div>
-      <ToggleSwitch checked={checked} onChange={onChange} disabled={disabled} ariaLabel={title} />
-    </div>
+    <Field className={styles.toggleRow} orientation="horizontal" data-disabled={disabled}>
+      <FieldContent>
+        <FieldTitle>{title}</FieldTitle>
+        {description ? <FieldDescription>{description}</FieldDescription> : null}
+      </FieldContent>
+      <Switch
+        checked={checked}
+        onCheckedChange={onChange}
+        disabled={disabled}
+        aria-label={title}
+        size="sm"
+      />
+    </Field>
   );
 }
 
 function SectionGrid({ children }: { children: ReactNode }) {
-  return <div className={styles.sectionGrid}>{children}</div>;
+  return <FieldGroup className={styles.sectionGrid}>{children}</FieldGroup>;
 }
 
 function SectionStack({ children }: { children: ReactNode }) {
@@ -137,35 +155,62 @@ function FieldShell({
   children: ReactNode;
 }) {
   return (
-    <div className={styles.fieldShell}>
-      <label id={labelId} htmlFor={htmlFor} className={styles.fieldLabel}>
+    <Field className={styles.fieldShell} data-invalid={Boolean(error)}>
+      <FieldLabel id={labelId} htmlFor={htmlFor}>
         {label}
-      </label>
+      </FieldLabel>
       {children}
-      {error ? (
-        <div id={errorId} className="error-box">
-          {error}
-        </div>
-      ) : null}
-      {hint ? (
-        <div id={hintId} className={styles.fieldHint}>
-          {hint}
-        </div>
-      ) : null}
-    </div>
+      {error ? <FieldError id={errorId}>{error}</FieldError> : null}
+      {hint ? <FieldDescription id={hintId}>{hint}</FieldDescription> : null}
+    </Field>
   );
 }
 
+function ConfigInputField({
+  label,
+  hint,
+  error,
+  id,
+  ...props
+}: ComponentProps<typeof BaseInput> & {
+  label: ReactNode;
+  hint?: ReactNode;
+  error?: ReactNode;
+}) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const hintId = hint ? `${inputId}-hint` : undefined;
+  const errorId = error ? `${inputId}-error` : undefined;
+
+  return (
+    <Field className={styles.fieldShell} data-invalid={Boolean(error)}>
+      <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
+      <BaseInput
+        id={inputId}
+        aria-describedby={[props['aria-describedby'], errorId, hintId]
+          .filter(Boolean)
+          .join(' ') || undefined}
+        aria-invalid={Boolean(error) || props['aria-invalid'] || undefined}
+        {...props}
+      />
+      {error ? <FieldError id={errorId}>{error}</FieldError> : null}
+      {hint ? <FieldDescription id={hintId}>{hint}</FieldDescription> : null}
+    </Field>
+  );
+}
+
+const Input = ConfigInputField;
+
 export function VisualConfigEditor({
+  activeSectionId,
   values,
   validationErrors,
   hasPayloadValidationErrors = false,
   disabled = false,
+  pageActions,
   onChange,
 }: VisualConfigEditorProps) {
   const { t } = useTranslation();
-  const pageTransitionLayer = usePageTransitionLayer();
-  const isCurrentLayer = pageTransitionLayer ? pageTransitionLayer.isCurrentLayer : true;
   const isMobile = useMediaQuery('(max-width: 768px)');
   const routingStrategyLabelId = useId();
   const routingStrategyHintId = `${routingStrategyLabelId}-hint`;
@@ -177,13 +222,6 @@ export function VisualConfigEditor({
   const nonstreamKeepaliveInputId = useId();
   const nonstreamKeepaliveHintId = `${nonstreamKeepaliveInputId}-hint`;
   const nonstreamKeepaliveErrorId = `${nonstreamKeepaliveInputId}-error`;
-  const [activeSectionId, setActiveSectionId] = useState<VisualSectionId>('server');
-  const sectionRefs = useRef<Partial<Record<VisualSectionId, HTMLElement | null>>>({});
-  const mobileNavScrollerRef = useRef<HTMLDivElement | null>(null);
-  const mobileNavButtonRefs = useRef<Partial<Record<VisualSectionId, HTMLButtonElement | null>>>(
-    {}
-  );
-
   const isKeepaliveDisabled =
     values.streaming.keepaliveSeconds === '' || values.streaming.keepaliveSeconds === '0';
   const isNonstreamKeepaliveDisabled =
@@ -267,19 +305,19 @@ export function VisualConfigEditor({
       {
         id: 'server',
         title: t('config_management.visual.sections.server.title'),
-        icon: IconSettings,
+        icon: SettingsIcon,
         errorCount: countErrors(['port']),
       },
       {
         id: 'auth',
         title: t('config_management.visual.sections.auth.title'),
-        icon: IconKey,
+        icon: KeyRoundIcon,
         errorCount: 0,
       },
       {
         id: 'system',
         title: t('config_management.visual.sections.system.title'),
-        icon: IconDiamond,
+        icon: DiamondIcon,
         errorCount: countErrors([
           'errorLogsMaxFiles',
           'logsMaxTotalSizeMb',
@@ -293,13 +331,13 @@ export function VisualConfigEditor({
       {
         id: 'quota',
         title: t('config_management.visual.sections.quota.title'),
-        icon: IconTimer,
+        icon: TimerIcon,
         errorCount: 0,
       },
       {
         id: 'streaming',
         title: t('config_management.visual.sections.streaming.title'),
-        icon: IconSatellite,
+        icon: SatelliteDishIcon,
         errorCount: countErrors([
           'streaming.keepaliveSeconds',
           'streaming.bootstrapRetries',
@@ -309,105 +347,43 @@ export function VisualConfigEditor({
       {
         id: 'payload',
         title: t('config_management.visual.sections.payload.title'),
-        icon: IconCode,
+        icon: Code2Icon,
         errorCount: hasPayloadValidationErrors ? 1 : 0,
       },
     ],
     [countErrors, hasPayloadValidationErrors, t]
   );
 
-  const hasValidationIssues =
-    sections.some((section) => section.errorCount > 0) || hasPayloadValidationErrors;
-  const activeSection = sections.find((section) => section.id === activeSectionId) ?? sections[0];
-
-  useEffect(() => {
-    if (!isCurrentLayer) return undefined;
-    if (typeof IntersectionObserver === 'undefined') return undefined;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntries = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio);
-
-        if (visibleEntries.length === 0) return;
-        setActiveSectionId(visibleEntries[0].target.id as VisualSectionId);
-      },
-      {
-        rootMargin: '-18% 0px -58% 0px',
-        threshold: [0.12, 0.3, 0.55],
-      }
-    );
-
-    for (const section of sections) {
-      const element = sectionRefs.current[section.id];
-      if (element) observer.observe(element);
-    }
-
-    return () => observer.disconnect();
-  }, [isCurrentLayer, sections]);
-
-  useEffect(() => {
-    if (!isCurrentLayer || !isMobile) return;
-    const scroller = mobileNavScrollerRef.current;
-    const button = mobileNavButtonRefs.current[activeSectionId];
-    if (!scroller || !button) return;
-
-    const scrollerRect = scroller.getBoundingClientRect();
-    const buttonRect = button.getBoundingClientRect();
-    const centeredLeft =
-      scroller.scrollLeft +
-      (buttonRect.left - scrollerRect.left) -
-      (scroller.clientWidth - buttonRect.width) / 2;
-    const maxScrollLeft = Math.max(scroller.scrollWidth - scroller.clientWidth, 0);
-    const targetLeft = Math.min(Math.max(centeredLeft, 0), maxScrollLeft);
-
-    scroller.scrollTo({
-      left: targetLeft,
-      behavior: 'smooth',
-    });
-  }, [activeSectionId, isCurrentLayer, isMobile]);
-
-  const handleSectionJump = useCallback((sectionId: VisualSectionId) => {
-    setActiveSectionId(sectionId);
-    sectionRefs.current[sectionId]?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'nearest',
-      inline: 'start',
-    });
-  }, []);
-
   const navContent = (
     <div className={styles.navList}>
       {sections.map((section, index) => {
         const Icon = section.icon;
+        const active = activeSectionId === section.id;
 
         return (
-          <button
+          <Link
             key={section.id}
-            type="button"
-            className={`${styles.navButton} ${
-              activeSectionId === section.id ? styles.navButtonActive : ''
-            }`}
-            onClick={() => handleSectionJump(section.id)}
+            to={`/config/${section.id}`}
+            className={cn(
+              buttonVariants({ variant: active ? 'secondary' : 'ghost', size: 'sm' }),
+              styles.navButton
+            )}
+            aria-current={active ? 'page' : undefined}
           >
-            <span className={styles.navIndex}>{String(index + 1).padStart(2, '0')}</span>
-            <span className={styles.navMain}>
-              <span className={styles.navHeadingRow}>
-                <span className={styles.navLabelWrap}>
-                  <span className={styles.navIcon}>
-                    <Icon size={14} />
-                  </span>
-                  <span className={styles.navLabel}>{section.title}</span>
-                </span>
-                {section.errorCount > 0 ? (
-                  <span className={styles.navBadge} aria-hidden="true">
-                    {section.errorCount}
-                  </span>
-                ) : null}
-              </span>
+            <Icon data-icon="inline-start" />
+            <span className={styles.navLabel}>
+              {String(index + 1).padStart(2, '0')} {section.title}
             </span>
-          </button>
+            {section.errorCount > 0 ? (
+              <Badge
+                className={styles.navBadge}
+                variant="outline"
+                aria-label={`${section.errorCount}`}
+              >
+                {section.errorCount}
+              </Badge>
+            ) : null}
+          </Link>
         );
       })}
     </div>
@@ -415,52 +391,32 @@ export function VisualConfigEditor({
 
   return (
     <div className={styles.visualEditor}>
-      <div className={styles.overview}>
-        <div className={styles.overviewHeader}>
-          <div className={styles.overviewMeta}>
-            <span className={styles.overviewPill}>
-              {t('config_management.visual.quick_jump', { defaultValue: '快速跳转' })}
-            </span>
-            <span className={styles.overviewPill}>{activeSection?.title}</span>
-            {hasValidationIssues ? (
-              <span className={`${styles.overviewPill} ${styles.overviewPillWarning}`}>
-                {t('config_management.visual.validation.validation_blocked')}
-              </span>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
       <div className={styles.workspace}>
         {isMobile ? (
           <div className={styles.mobileSectionNav}>
             <div
-              ref={mobileNavScrollerRef}
               className={styles.mobileSectionNavScroller}
               aria-label={t('config_management.visual.quick_jump', { defaultValue: '快速跳转' })}
             >
               {sections.map((section, index) => (
-                <button
+                <Link
                   key={section.id}
-                  ref={(node) => {
-                    mobileNavButtonRefs.current[section.id] = node;
-                  }}
-                  type="button"
-                  className={`${styles.mobileSectionNavButton} ${
-                    activeSectionId === section.id ? styles.mobileSectionNavButtonActive : ''
-                  }`}
-                  onClick={() => handleSectionJump(section.id)}
+                  to={`/config/${section.id}`}
+                  className={cn(
+                    styles.mobileSectionNavButton,
+                    activeSectionId === section.id && styles.mobileSectionNavButtonActive
+                  )}
+                  aria-current={activeSectionId === section.id ? 'page' : undefined}
                 >
-                  <span className={styles.mobileSectionNavIndex}>
-                    {String(index + 1).padStart(2, '0')}
+                  <span className={styles.mobileSectionNavLabel}>
+                    {String(index + 1).padStart(2, '0')} {section.title}
                   </span>
-                  <span className={styles.mobileSectionNavLabel}>{section.title}</span>
                   {section.errorCount > 0 ? (
-                    <span className={styles.mobileSectionNavBadge} aria-hidden="true">
+                    <Badge className={styles.mobileSectionNavBadge} variant="outline">
                       {section.errorCount}
-                    </span>
+                    </Badge>
                   ) : null}
-                </button>
+                </Link>
               ))}
             </div>
           </div>
@@ -471,15 +427,14 @@ export function VisualConfigEditor({
         </aside>
 
         <div className={styles.sections}>
+          {activeSectionId === 'server' ? (
           <ConfigSection
             id="server"
-            ref={(node) => {
-              sectionRefs.current.server = node;
-            }}
             indexLabel="01"
-            icon={<IconSettings size={16} />}
+            icon={<SettingsIcon size={16} />}
             title={t('config_management.visual.sections.server.title')}
             description={t('config_management.visual.sections.server.description')}
+            action={pageActions}
           >
             <SectionStack>
               <SectionGrid>
@@ -595,16 +550,16 @@ export function VisualConfigEditor({
               </SectionSubsection>
             </SectionStack>
           </ConfigSection>
+          ) : null}
 
+          {activeSectionId === 'auth' ? (
           <ConfigSection
             id="auth"
-            ref={(node) => {
-              sectionRefs.current.auth = node;
-            }}
             indexLabel="02"
-            icon={<IconKey size={16} />}
+            icon={<KeyRoundIcon size={16} />}
             title={t('config_management.visual.sections.auth.title')}
             description={t('config_management.visual.sections.auth.description')}
+            action={pageActions}
           >
             <SectionStack>
               <Input
@@ -624,16 +579,16 @@ export function VisualConfigEditor({
               </div>
             </SectionStack>
           </ConfigSection>
+          ) : null}
 
+          {activeSectionId === 'system' ? (
           <ConfigSection
             id="system"
-            ref={(node) => {
-              sectionRefs.current.system = node;
-            }}
             indexLabel="03"
-            icon={<IconDiamond size={16} />}
+            icon={<DiamondIcon size={16} />}
             title={t('config_management.visual.sections.system.title')}
             description={t('config_management.visual.sections.system.description')}
+            action={pageActions}
           >
             <SectionStack>
               <SectionGrid>
@@ -997,16 +952,16 @@ export function VisualConfigEditor({
               </SectionSubsection>
             </SectionStack>
           </ConfigSection>
+          ) : null}
 
+          {activeSectionId === 'quota' ? (
           <ConfigSection
             id="quota"
-            ref={(node) => {
-              sectionRefs.current.quota = node;
-            }}
             indexLabel="04"
-            icon={<IconTimer size={16} />}
+            icon={<TimerIcon size={16} />}
             title={t('config_management.visual.sections.quota.title')}
             description={t('config_management.visual.sections.quota.description')}
+            action={pageActions}
           >
             <SectionGrid>
               <ToggleRow
@@ -1031,16 +986,16 @@ export function VisualConfigEditor({
               />
             </SectionGrid>
           </ConfigSection>
+          ) : null}
 
+          {activeSectionId === 'streaming' ? (
           <ConfigSection
             id="streaming"
-            ref={(node) => {
-              sectionRefs.current.streaming = node;
-            }}
             indexLabel="05"
-            icon={<IconSatellite size={16} />}
+            icon={<SatelliteDishIcon size={16} />}
             title={t('config_management.visual.sections.streaming.title')}
             description={t('config_management.visual.sections.streaming.description')}
+            action={pageActions}
           >
             <SectionStack>
               <SectionGrid>
@@ -1132,16 +1087,16 @@ export function VisualConfigEditor({
               </SectionGrid>
             </SectionStack>
           </ConfigSection>
+          ) : null}
 
+          {activeSectionId === 'payload' ? (
           <ConfigSection
             id="payload"
-            ref={(node) => {
-              sectionRefs.current.payload = node;
-            }}
             indexLabel="06"
-            icon={<IconCode size={16} />}
+            icon={<Code2Icon size={16} />}
             title={t('config_management.visual.sections.payload.title')}
             description={t('config_management.visual.sections.payload.description')}
+            action={pageActions}
           >
             <SectionStack>
               <SectionSubsection
@@ -1204,6 +1159,7 @@ export function VisualConfigEditor({
               </SectionSubsection>
             </SectionStack>
           </ConfigSection>
+          ) : null}
         </div>
       </div>
     </div>

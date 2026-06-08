@@ -1,0 +1,106 @@
+.dialogContent {
+  width: min(640px, calc(100vw - 24px));
+  max-width: 640px;
+}
+
+.dialogTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.titleIcon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: currentColor;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.actionRow,
+.urlActions,
+.filePicker,
+.resultActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.urlInput {
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.fileName {
+  min-width: 0;
+  flex: 1 1 220px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding-inline: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground);
+  background: var(--background);
+  font-size: 13px;
+}
+
+.fileNamePlaceholder {
+  color: var(--muted-foreground);
+}
+
+.resultGrid {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 8px 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  font-size: 13px;
+}
+
+.resultKey {
+  color: var(--muted-foreground);
+}
+
+.resultValue {
+  min-width: 0;
+  color: var(--foreground);
+  word-break: break-all;
+}
+
+@media (max-width: 640px) {
+  .actionRow,
+  .urlActions,
+  .filePicker,
+  .resultActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .actionRow > *,
+  .urlActions > *,
+  .resultActions > * {
+    width: 100%;
+  }
+
+  .resultGrid {
+    grid-template-columns: 1fr;
+  }
+}

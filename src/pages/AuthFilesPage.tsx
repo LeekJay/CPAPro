@@ -1,46 +1,80 @@
 import {
   useCallback,
-  type CSSProperties,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
-  type ChangeEvent,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import {
+  ChevronDownIcon,
+  DownloadIcon,
+  EyeIcon,
+  KeyRoundIcon,
+  PlusIcon,
+  ShapesIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { animate } from 'motion/mini';
 import type { AnimationPlaybackControlsWithThen } from 'motion-dom';
 import { useInterval } from '@/hooks/useInterval';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
+import { LobeProviderIcon } from '@/components/common/LobeProviderIcon';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { IconFilterAll, IconSearch } from '@/components/ui/icons';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
+import { Button } from '@/components/ui/button';
+import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/shadcn-card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { copyToClipboard } from '@/utils/clipboard';
 import {
-  MAX_CARD_PAGE_SIZE,
-  MIN_CARD_PAGE_SIZE,
-  QUOTA_PROVIDER_TYPES,
-  clampCardPageSize,
-  getAuthFileIcon,
-  getTypeColor,
   getTypeLabel,
-  hasAuthFileStatusMessage,
   isRuntimeOnlyAuthFile,
   normalizeProviderKey,
-  parsePriorityValue,
-  type QuotaProviderType,
-  type ResolvedTheme,
 } from '@/features/authFiles/constants';
-import { AuthFileCard } from '@/features/authFiles/components/AuthFileCard';
+import { resolveAuthFileEmail } from '@/features/authFiles/authFileMetadata';
 import { AuthFileModelsModal } from '@/features/authFiles/components/AuthFileModelsModal';
+import { AuthFileAccountAddDialog } from '@/features/authFiles/components/AuthFileAccountAddDialog';
+import {
+  AUTH_ACCOUNT_CHANNELS,
+  type AuthAccountChannel,
+} from '@/features/authFiles/authAccountChannels';
 import { AuthFilesPrefixProxyEditorModal } from '@/features/authFiles/components/AuthFilesPrefixProxyEditorModal';
 import { OAuthExcludedCard } from '@/features/authFiles/components/OAuthExcludedCard';
 import { OAuthModelAliasCard } from '@/features/authFiles/components/OAuthModelAliasCard';
@@ -48,16 +82,11 @@ import { useAuthFilesData } from '@/features/authFiles/hooks/useAuthFilesData';
 import { useAuthFilesModels } from '@/features/authFiles/hooks/useAuthFilesModels';
 import { useAuthFilesOauth } from '@/features/authFiles/hooks/useAuthFilesOauth';
 import { useAuthFilesPrefixProxyEditor } from '@/features/authFiles/hooks/useAuthFilesPrefixProxyEditor';
-import { useAuthFilesStatusBarCache } from '@/features/authFiles/hooks/useAuthFilesStatusBarCache';
 import {
-  isAuthFilesSortMode,
   readAuthFilesUiState,
-  readPersistedAuthFilesCompactMode,
   writeAuthFilesUiState,
-  writePersistedAuthFilesCompactMode,
-  type AuthFilesSortMode,
 } from '@/features/authFiles/uiState';
-import { useAuthStore, useNotificationStore, useThemeStore } from '@/stores';
+import { useAuthStore, useNotificationStore } from '@/stores';
 import styles from './AuthFilesPage.module.scss';
 
 const easePower3Out = (progress: number) => 1 - (1 - progress) ** 4;
@@ -65,45 +94,27 @@ const easePower2In = (progress: number) => progress ** 3;
 const BATCH_BAR_BASE_TRANSFORM = 'translateX(-50%)';
 const BATCH_BAR_HIDDEN_TRANSFORM = 'translateX(-50%) translateY(56px)';
 const DEFAULT_REGULAR_PAGE_SIZE = 9;
-const DEFAULT_COMPACT_PAGE_SIZE = 12;
-
-const escapeWildcardSearchSegment = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const buildWildcardSearch = (value: string): RegExp | null => {
-  if (!value.includes('*')) return null;
-  const pattern = value.split('*').map(escapeWildcardSearchSegment).join('.*');
-  return new RegExp(pattern, 'i');
-};
 
 export function AuthFilesPage() {
   const { t } = useTranslation();
   const showNotification = useNotificationStore((state) => state.showNotification);
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
-  const resolvedTheme: ResolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const pageTransitionLayer = usePageTransitionLayer();
   const isCurrentLayer = pageTransitionLayer ? pageTransitionLayer.status === 'current' : true;
   const navigate = useNavigate();
 
   const [filter, setFilter] = useState<'all' | string>('all');
-  const [problemOnly, setProblemOnly] = useState(false);
-  const [disabledOnly, setDisabledOnly] = useState(false);
-  const [compactMode, setCompactMode] = useState(false);
-  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSizeByMode, setPageSizeByMode] = useState({
-    regular: DEFAULT_REGULAR_PAGE_SIZE,
-    compact: DEFAULT_COMPACT_PAGE_SIZE,
-  });
-  const [pageSizeInput, setPageSizeInput] = useState('9');
   const [viewMode, setViewMode] = useState<'diagram' | 'list'>('list');
-  const [sortMode, setSortMode] = useState<AuthFilesSortMode>('default');
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+  const [accountChannel, setAccountChannel] = useState<AuthAccountChannel>('codex');
   const [batchActionBarVisible, setBatchActionBarVisible] = useState(false);
   const [uiStateHydrated, setUiStateHydrated] = useState(false);
   const floatingBatchActionsRef = useRef<HTMLDivElement>(null);
   const batchActionAnimationRef = useRef<AnimationPlaybackControlsWithThen | null>(null);
   const previousSelectionCountRef = useRef(0);
   const selectionCountRef = useRef(0);
+  const lastErrorNotificationRef = useRef('');
 
   const {
     files,
@@ -132,8 +143,6 @@ export function AuthFilesPage() {
     batchSetStatus,
     batchDelete,
   } = useAuthFilesData();
-
-  const statusBarCache = useAuthFilesStatusBarCache(files);
 
   const {
     excluded,
@@ -178,60 +187,16 @@ export function AuthFilesPage() {
 
   const disableControls = connectionStatus !== 'connected';
   const normalizedFilter = normalizeProviderKey(String(filter));
-  const quotaFilterType: QuotaProviderType | null = QUOTA_PROVIDER_TYPES.has(
-    normalizedFilter as QuotaProviderType
-  )
-    ? (normalizedFilter as QuotaProviderType)
-    : null;
-  const pageSize = compactMode ? pageSizeByMode.compact : pageSizeByMode.regular;
+  const pageSize = DEFAULT_REGULAR_PAGE_SIZE;
 
   useEffect(() => {
-    const persistedCompactMode = readPersistedAuthFilesCompactMode();
-    if (typeof persistedCompactMode === 'boolean') {
-      setCompactMode(persistedCompactMode);
-    }
-
     const persisted = readAuthFilesUiState();
     if (persisted) {
       if (typeof persisted.filter === 'string' && persisted.filter.trim()) {
         setFilter(normalizeProviderKey(persisted.filter));
       }
-      if (typeof persisted.problemOnly === 'boolean') {
-        setProblemOnly(persisted.problemOnly);
-      }
-      if (typeof persisted.disabledOnly === 'boolean') {
-        setDisabledOnly(persisted.disabledOnly);
-      }
-      if (
-        typeof persistedCompactMode !== 'boolean' &&
-        typeof persisted.compactMode === 'boolean'
-      ) {
-        setCompactMode(persisted.compactMode);
-      }
-      if (typeof persisted.search === 'string') {
-        setSearch(persisted.search);
-      }
       if (typeof persisted.page === 'number' && Number.isFinite(persisted.page)) {
         setPage(Math.max(1, Math.round(persisted.page)));
-      }
-      const legacyPageSize =
-        typeof persisted.pageSize === 'number' && Number.isFinite(persisted.pageSize)
-          ? clampCardPageSize(persisted.pageSize)
-          : null;
-      const regularPageSize =
-        typeof persisted.regularPageSize === 'number' && Number.isFinite(persisted.regularPageSize)
-          ? clampCardPageSize(persisted.regularPageSize)
-          : legacyPageSize ?? DEFAULT_REGULAR_PAGE_SIZE;
-      const compactPageSize =
-        typeof persisted.compactPageSize === 'number' && Number.isFinite(persisted.compactPageSize)
-          ? clampCardPageSize(persisted.compactPageSize)
-          : legacyPageSize ?? DEFAULT_COMPACT_PAGE_SIZE;
-      setPageSizeByMode({
-        regular: regularPageSize,
-        compact: compactPageSize,
-      });
-      if (isAuthFilesSortMode(persisted.sortMode)) {
-        setSortMode(persisted.sortMode);
       }
     }
 
@@ -243,92 +208,28 @@ export function AuthFilesPage() {
 
     writeAuthFilesUiState({
       filter,
-      problemOnly,
-      disabledOnly,
-      compactMode,
-      search,
       page,
       pageSize,
-      regularPageSize: pageSizeByMode.regular,
-      compactPageSize: pageSizeByMode.compact,
-      sortMode,
     });
-    writePersistedAuthFilesCompactMode(compactMode);
   }, [
-    compactMode,
-    disabledOnly,
     filter,
     page,
     pageSize,
-    pageSizeByMode,
-    problemOnly,
-    search,
-    sortMode,
     uiStateHydrated,
   ]);
-
-  useEffect(() => {
-    setPageSizeInput(String(pageSize));
-  }, [pageSize]);
-
-  const setCurrentModePageSize = useCallback(
-    (next: number) => {
-      setPageSizeByMode((current) =>
-        compactMode ? { ...current, compact: next } : { ...current, regular: next }
-      );
-    },
-    [compactMode]
-  );
-
-  const commitPageSizeInput = (rawValue: string) => {
-    const trimmed = rawValue.trim();
-    if (!trimmed) {
-      setPageSizeInput(String(pageSize));
-      return;
-    }
-
-    const value = Number(trimmed);
-    if (!Number.isFinite(value)) {
-      setPageSizeInput(String(pageSize));
-      return;
-    }
-
-    const next = clampCardPageSize(value);
-    setCurrentModePageSize(next);
-    setPageSizeInput(String(next));
-    setPage(1);
-  };
-
-  const handlePageSizeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const rawValue = event.currentTarget.value;
-    setPageSizeInput(rawValue);
-
-    const trimmed = rawValue.trim();
-    if (!trimmed) return;
-
-    const parsed = Number(trimmed);
-    if (!Number.isFinite(parsed)) return;
-
-    const rounded = Math.round(parsed);
-    if (rounded < MIN_CARD_PAGE_SIZE || rounded > MAX_CARD_PAGE_SIZE) return;
-
-    setCurrentModePageSize(rounded);
-    setPage(1);
-  };
-
-  const handleSortModeChange = useCallback(
-    (value: string) => {
-      if (!isAuthFilesSortMode(value) || value === sortMode) return;
-      setSortMode(value);
-      setPage(1);
-      void loadFiles().catch(() => {});
-    },
-    [loadFiles, sortMode]
-  );
 
   const handleHeaderRefresh = useCallback(async () => {
     await Promise.all([loadFiles(), loadExcluded(), loadModelAlias()]);
   }, [loadFiles, loadExcluded, loadModelAlias]);
+
+  const handleAccountChannelSelect = useCallback((channel: AuthAccountChannel) => {
+    setAccountChannel(channel);
+    setAccountDialogOpen(true);
+  }, []);
+
+  const handleAccountCompleted = useCallback(() => {
+    void loadFiles().catch(() => {});
+  }, [loadFiles]);
 
   useHeaderRefresh(handleHeaderRefresh);
 
@@ -346,6 +247,17 @@ export function AuthFilesPage() {
     isCurrentLayer ? 240_000 : null
   );
 
+  useEffect(() => {
+    if (!error) {
+      lastErrorNotificationRef.current = '';
+      return;
+    }
+
+    if (lastErrorNotificationRef.current === error) return;
+    lastErrorNotificationRef.current = error;
+    showNotification(error, 'error');
+  }, [error, showNotification]);
+
   const existingTypes = useMemo(() => {
     const types = new Set<string>(['all']);
     files.forEach((file) => {
@@ -355,77 +267,34 @@ export function AuthFilesPage() {
     return Array.from(types);
   }, [files]);
 
-  const filesMatchingStatusFilters = useMemo(
-    () =>
-      files.filter((file) => {
-        if (problemOnly && !hasAuthFileStatusMessage(file)) return false;
-        if (disabledOnly && file.disabled !== true) return false;
-        return true;
-      }),
-    [disabledOnly, files, problemOnly]
-  );
-
-  const sortOptions = useMemo(
-    () => [
-      { value: 'default', label: t('auth_files.sort_default') },
-      { value: 'az', label: t('auth_files.sort_az') },
-      { value: 'priority', label: t('auth_files.sort_priority') },
-    ],
-    [t]
-  );
-
   const typeCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: filesMatchingStatusFilters.length };
-    filesMatchingStatusFilters.forEach((file) => {
+    const counts: Record<string, number> = { all: files.length };
+    files.forEach((file) => {
       const type = normalizeProviderKey(String(file.type ?? file.provider ?? ''));
       if (!type) return;
       counts[type] = (counts[type] || 0) + 1;
     });
     return counts;
-  }, [filesMatchingStatusFilters]);
-
-  const normalizedSearch = search.trim();
-  const wildcardSearch = useMemo(() => buildWildcardSearch(normalizedSearch), [normalizedSearch]);
+  }, [files]);
 
   const filtered = useMemo(() => {
-    const normalizedTerm = normalizedSearch.toLowerCase();
-
-    return filesMatchingStatusFilters.filter((item) => {
+    return files.filter((item) => {
       const type = normalizeProviderKey(String(item.type ?? item.provider ?? ''));
-      const matchType = normalizedFilter === 'all' || type === normalizedFilter;
-      const matchSearch =
-        !normalizedSearch ||
-        [item.name, item.type, item.provider].some((value) => {
-          const content = (value || '').toString();
-          return wildcardSearch
-            ? wildcardSearch.test(content)
-            : content.toLowerCase().includes(normalizedTerm);
-        });
-      return matchType && matchSearch;
+      return normalizedFilter === 'all' || type === normalizedFilter;
     });
-  }, [filesMatchingStatusFilters, normalizedFilter, normalizedSearch, wildcardSearch]);
+  }, [files, normalizedFilter]);
 
   const sorted = useMemo(() => {
     const copy = [...filtered];
-    if (sortMode === 'default') {
-      copy.sort((a, b) => {
-        const providerA = normalizeProviderKey(String(a.provider ?? a.type ?? 'unknown'));
-        const providerB = normalizeProviderKey(String(b.provider ?? b.type ?? 'unknown'));
-        const providerCompare = providerA.localeCompare(providerB);
-        if (providerCompare !== 0) return providerCompare;
-        return a.name.localeCompare(b.name);
-      });
-    } else if (sortMode === 'az') {
-      copy.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortMode === 'priority') {
-      copy.sort((a, b) => {
-        const pa = parsePriorityValue(a.priority ?? a['priority']) ?? 0;
-        const pb = parsePriorityValue(b.priority ?? b['priority']) ?? 0;
-        return pb - pa; // 高优先级排前面
-      });
-    }
+    copy.sort((a, b) => {
+      const providerA = normalizeProviderKey(String(a.provider ?? a.type ?? 'unknown'));
+      const providerB = normalizeProviderKey(String(b.provider ?? b.type ?? 'unknown'));
+      const providerCompare = providerA.localeCompare(providerB);
+      if (providerCompare !== 0) return providerCompare;
+      return a.name.localeCompare(b.name);
+    });
     return copy;
-  }, [filtered, sortMode]);
+  }, [filtered]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -440,6 +309,9 @@ export function AuthFilesPage() {
     [sorted]
   );
   const selectedNames = useMemo(() => Array.from(selectedFiles), [selectedFiles]);
+  const allPageItemsSelected =
+    selectablePageItems.length > 0 &&
+    selectablePageItems.every((file) => selectedFiles.has(file.name));
   const selectedHasStatusUpdating = useMemo(
     () => selectedNames.some((name) => statusUpdating[name] === true),
     [selectedNames, statusUpdating]
@@ -583,56 +455,215 @@ export function AuthFilesPage() {
     []
   );
 
-  const renderFilterTags = () => (
-    <div className={styles.filterRail}>
-      <div className={styles.filterTags}>
-        {existingTypes.map((type) => {
-          const isActive = normalizedFilter === type;
-          const iconSrc = getAuthFileIcon(type, resolvedTheme);
-          const color =
-            type === 'all'
-              ? { bg: 'var(--bg-tertiary)', text: 'var(--text-primary)' }
-              : getTypeColor(type, resolvedTheme);
-          const buttonStyle = {
-            '--filter-color': color.text,
-            '--filter-surface': color.bg,
-            '--filter-active-text': resolvedTheme === 'dark' ? '#111827' : '#ffffff',
-          } as CSSProperties;
+  const renderProviderTabs = () => (
+    <Tabs
+      value={normalizedFilter}
+      onValueChange={(type) => {
+        setFilter(type);
+        setPage(1);
+      }}
+      className={styles.providerTabs}
+    >
+      <TabsList className={styles.providerTabsList}>
+        {existingTypes.map((type) => (
+          <TabsTrigger key={type} value={type} className={styles.providerTabsTrigger}>
+            {type !== 'all' ? (
+              <LobeProviderIcon
+                provider={type}
+                className={styles.providerTabsIcon}
+                fallbackLabel={getTypeLabel(t, type)}
+              />
+            ) : null}
+            <span className={styles.providerTabsLabel}>{getTypeLabel(t, type)}</span>
+            <span className={styles.providerTabsCount}>{typeCounts[type] ?? 0}</span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  );
 
-          return (
-            <button
-              key={type}
-              className={`${styles.filterTag} ${isActive ? styles.filterTagActive : ''}`}
-              style={buttonStyle}
-              onClick={() => {
-                setFilter(type);
-                setPage(1);
-              }}
-            >
-              <span className={styles.filterTagLabel}>
-                {type === 'all' ? (
-                  <span className={`${styles.filterTagIconWrap} ${styles.filterAllIconWrap}`}>
-                    <IconFilterAll className={styles.filterAllIcon} size={16} />
+  const renderFilesTable = () => (
+    <div className={styles.tablePanel}>
+      <Table className={styles.authFilesTable}>
+        <TableHeader>
+          <TableRow>
+            <TableHead className={styles.tableSelectCol}>
+              <Checkbox
+                checked={allPageItemsSelected}
+                disabled={selectablePageItems.length === 0}
+                aria-label={
+                  allPageItemsSelected
+                    ? t('auth_files.batch_deselect')
+                    : t('auth_files.batch_select_page')
+                }
+                onCheckedChange={() => {
+                  if (allPageItemsSelected) {
+                    invertVisibleSelection(selectablePageItems);
+                    return;
+                  }
+                  selectAllVisible(pageItems);
+                }}
+              />
+            </TableHead>
+            <TableHead className={styles.providerIconHead}>
+              {t('auth_files.table_provider')}
+            </TableHead>
+            <TableHead>{t('auth_files.table_email')}</TableHead>
+            <TableHead className={styles.tableActionsHead}>{t('common.action')}</TableHead>
+            <TableHead className={styles.statusControlHead}>
+              {t('auth_files.table_status_control')}
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {pageItems.map((file) => {
+            const isRuntimeOnly = isRuntimeOnlyAuthFile(file);
+            const providerKey = normalizeProviderKey(
+              String(file.type ?? file.provider ?? 'unknown')
+            );
+            const typeLabel = getTypeLabel(t, providerKey);
+            const email = resolveAuthFileEmail(file);
+
+            return (
+              <TableRow
+                key={file.name}
+                data-state={selectedFiles.has(file.name) ? 'selected' : undefined}
+                className={file.disabled ? styles.tableRowDisabled : undefined}
+              >
+                <TableCell className={styles.tableSelectCol}>
+                  {!isRuntimeOnly && (
+                    <Checkbox
+                      checked={selectedFiles.has(file.name)}
+                      aria-label={
+                        selectedFiles.has(file.name)
+                          ? t('auth_files.batch_deselect')
+                          : t('auth_files.batch_select_all')
+                      }
+                      onCheckedChange={() => toggleSelect(file.name)}
+                    />
+                  )}
+                </TableCell>
+                <TableCell className={styles.providerIconCell}>
+                  <div className={styles.tableProviderAvatar} title={typeLabel}>
+                    <LobeProviderIcon
+                      provider={providerKey}
+                      size={18}
+                      className={styles.tableProviderIcon}
+                      fallbackLabel={typeLabel}
+                    />
+                  </div>
+                </TableCell>
+                <TableCell className={styles.emailCell}>
+                  <span className={email ? styles.emailValue : styles.tableEmptyValue}>
+                    {email ?? '-'}
                   </span>
-                ) : (
-                  <span className={styles.filterTagIconWrap}>
-                    {iconSrc ? (
-                      <img src={iconSrc} alt="" className={styles.filterTagIcon} />
-                    ) : (
-                      <span className={styles.filterTagIconFallback}>
-                        {getTypeLabel(t, type).slice(0, 1).toUpperCase()}
-                      </span>
+                </TableCell>
+                <TableCell className={styles.tableActionsCell}>
+                  <div className={styles.tableActions}>
+                    {(!isRuntimeOnly || providerKey === 'aistudio') && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => showModels(file)}
+                        title={t('auth_files.models_button')}
+                        aria-label={t('auth_files.models_button')}
+                        disabled={disableControls}
+                      >
+                        <ShapesIcon data-icon="inline-start" />
+                      </Button>
                     )}
-                  </span>
-                )}
-                <span className={styles.filterTagText}>{getTypeLabel(t, type)}</span>
-              </span>
-              <span className={styles.filterTagCount}>{typeCounts[type] ?? 0}</span>
-            </button>
-          );
-        })}
+                    {!isRuntimeOnly && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => handleDownload(file.name)}
+                          title={t('auth_files.download_button')}
+                          aria-label={t('auth_files.download_button')}
+                          disabled={disableControls}
+                        >
+                          <DownloadIcon data-icon="inline-start" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => openPrefixProxyEditor(file)}
+                          title={t('auth_files.viewer_button')}
+                          aria-label={t('auth_files.viewer_button')}
+                          disabled={disableControls}
+                        >
+                          <EyeIcon data-icon="inline-start" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon-sm"
+                          onClick={() => handleDelete(file.name)}
+                          title={t('auth_files.delete_button')}
+                          aria-label={t('auth_files.delete_button')}
+                          disabled={disableControls || deleting === file.name}
+                        >
+                          <Trash2Icon data-icon="inline-start" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className={styles.statusControlCell}>
+                  {!isRuntimeOnly ? (
+                    <Switch
+                      size="sm"
+                      aria-label={t('auth_files.status_toggle_label')}
+                      checked={!file.disabled}
+                      disabled={disableControls || statusUpdating[file.name] === true}
+                      onCheckedChange={(value) => handleStatusToggle(file, value)}
+                    />
+                  ) : (
+                    <span className={styles.tableEmptyValue}>-</span>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  const renderFilesSkeleton = () => (
+    <div className={styles.tablePanel} aria-label={t('common.loading')}>
+      <div className={styles.tableSkeleton}>
+        {Array.from({ length: 6 }, (_, index) => (
+          <div key={index} className={styles.tableSkeletonRow}>
+            <Skeleton className={styles.tableSkeletonCheck} />
+            <Skeleton className={styles.tableSkeletonFile} />
+            <Skeleton className={styles.tableSkeletonState} />
+            <Skeleton className={styles.tableSkeletonHealth} />
+            <Skeleton className={styles.tableSkeletonActions} />
+          </div>
+        ))}
       </div>
     </div>
+  );
+
+  const renderEmptyState = () => (
+    <Empty className={styles.emptyState}>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <KeyRoundIcon />
+        </EmptyMedia>
+        <EmptyTitle>
+          {normalizedFilter === 'all'
+            ? t('auth_files.empty_title')
+            : t('auth_files.filter_empty_title')}
+        </EmptyTitle>
+        <EmptyDescription>
+          {normalizedFilter === 'all'
+            ? t('auth_files.empty_desc')
+            : t('auth_files.filter_empty_desc')}
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent />
+    </Empty>
   );
 
   const titleNode = (
@@ -643,16 +674,6 @@ export function AuthFilesPage() {
   );
 
   const deleteAllButtonLabel = (() => {
-    if (disabledOnly) {
-      return t('auth_files.delete_filtered_result_button');
-    }
-    if (problemOnly) {
-      return normalizedFilter === 'all'
-        ? t('auth_files.delete_problem_button')
-        : t('auth_files.delete_problem_button_with_type', {
-            type: getTypeLabel(t, normalizedFilter),
-          });
-    }
     return normalizedFilter === 'all'
       ? t('auth_files.delete_all_button')
       : `${t('common.delete')} ${getTypeLabel(t, normalizedFilter)}`;
@@ -665,182 +686,106 @@ export function AuthFilesPage() {
         <p className={styles.description}>{t('auth_files.description')}</p>
       </div>
 
-      <Card
-        title={titleNode}
-        extra={
-          <div className={styles.headerActions}>
-            <Button variant="secondary" size="sm" onClick={handleHeaderRefresh} disabled={loading}>
-              {t('common.refresh')}
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleUploadClick}
-              disabled={disableControls || uploading}
-              loading={uploading}
-            >
-              {t('auth_files.upload_button')}
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() =>
-                handleDeleteAll({
-                  filter,
-                  problemOnly,
-                  disabledOnly,
-                  onResetFilterToAll: () => setFilter('all'),
-                  onResetProblemOnly: () => setProblemOnly(false),
-                  onResetDisabledOnly: () => setDisabledOnly(false),
-                })
-              }
-              disabled={disableControls || loading || deletingAll}
-              loading={deletingAll}
-            >
-              {deleteAllButtonLabel}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,application/json"
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-          </div>
-        }
-      >
-        {error && <div className={styles.errorBox}>{error}</div>}
+      <Card className={styles.filesPanel}>
+        <CardHeader className={styles.filesPanelHeader}>
+          <CardTitle>{titleNode}</CardTitle>
+          <CardAction className={styles.filesPanelActions}>
+            <div className={styles.headerActions}>
+              <Button variant="secondary" size="sm" onClick={handleHeaderRefresh} disabled={loading}>
+                {t('common.refresh')}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleUploadClick}
+                disabled={disableControls || uploading}
+                loading={uploading}
+              >
+                {t('auth_files.upload_button')}
+              </Button>
+              <ButtonGroup
+                className={styles.accountButtonGroup}
+                aria-label={t('auth_files.add_account_button')}
+              >
+                <Button size="sm" onClick={() => handleAccountChannelSelect(accountChannel)} disabled={disableControls}>
+                  <PlusIcon data-icon="inline-start" />
+                  {t('auth_files.add_account_button')}
+                </Button>
+                <ButtonGroupSeparator />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      aria-label={t('auth_files.add_account_channel_button')}
+                      disabled={disableControls}
+                    >
+                      <ChevronDownIcon data-icon="inline-start" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className={styles.accountChannelMenu}>
+                    <DropdownMenuLabel>
+                      {t('auth_files.add_account_button', { defaultValue: '添加账号' })}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      {AUTH_ACCOUNT_CHANNELS.map((channel) => (
+                        <DropdownMenuItem
+                          key={channel.id}
+                          onSelect={() => handleAccountChannelSelect(channel.id)}
+                        >
+                          <LobeProviderIcon
+                            provider={channel.id}
+                            className={styles.accountChannelIcon}
+                            fallbackLabel={t(channel.titleKey)}
+                          />
+                          <span>{t(channel.titleKey)}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </ButtonGroup>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() =>
+                  handleDeleteAll({
+                    filter,
+                    problemOnly: false,
+                    disabledOnly: false,
+                    onResetFilterToAll: () => setFilter('all'),
+                    onResetProblemOnly: () => {},
+                    onResetDisabledOnly: () => {},
+                  })
+                }
+                disabled={disableControls || loading || deletingAll}
+                loading={deletingAll}
+              >
+                {deleteAllButtonLabel}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                multiple
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
+            </div>
+          </CardAction>
+        </CardHeader>
 
+        <CardContent className={styles.filesPanelContent}>
         <div className={styles.filterSection}>
-          {renderFilterTags()}
+          {renderProviderTabs()}
 
           <div className={styles.filterContent}>
-            <div className={styles.filterControlsPanel}>
-              <div className={styles.filterControls}>
-                <div className={`${styles.filterItem} ${styles.filterSearchItem}`}>
-                  <label>{t('auth_files.search_label')}</label>
-                  <Input
-                    className={styles.searchInput}
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setPage(1);
-                    }}
-                    placeholder={t('auth_files.search_placeholder')}
-                    rightElement={<IconSearch className={styles.searchIcon} size={18} />}
-                  />
-                </div>
-                <div className={styles.filterItem}>
-                  <label>{t('auth_files.page_size_label')}</label>
-                  <input
-                    className={styles.pageSizeSelect}
-                    type="number"
-                    min={MIN_CARD_PAGE_SIZE}
-                    max={MAX_CARD_PAGE_SIZE}
-                    step={1}
-                    value={pageSizeInput}
-                    onChange={handlePageSizeChange}
-                    onBlur={(e) => commitPageSizeInput(e.currentTarget.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                  />
-                </div>
-                <div className={styles.filterItem}>
-                  <label>{t('auth_files.sort_label')}</label>
-                  <Select
-                    className={styles.sortSelect}
-                    value={sortMode}
-                    options={sortOptions}
-                    onChange={handleSortModeChange}
-                    ariaLabel={t('auth_files.sort_label')}
-                    fullWidth
-                  />
-                </div>
-                <div className={`${styles.filterItem} ${styles.filterToggleItem}`}>
-                  <label>{t('auth_files.display_options_label')}</label>
-                  <div className={styles.filterToggleGroup}>
-                    <div className={styles.filterToggleCard}>
-                      <ToggleSwitch
-                        checked={problemOnly}
-                        onChange={(value) => {
-                          setProblemOnly(value);
-                          setPage(1);
-                        }}
-                        ariaLabel={t('auth_files.problem_filter_only')}
-                        label={
-                          <span className={styles.filterToggleLabel}>
-                            {t('auth_files.problem_filter_only')}
-                          </span>
-                        }
-                      />
-                    </div>
-                    <div className={styles.filterToggleCard}>
-                      <ToggleSwitch
-                        checked={disabledOnly}
-                        onChange={(value) => {
-                          setDisabledOnly(value);
-                          setPage(1);
-                        }}
-                        ariaLabel={t('auth_files.disabled_filter_only')}
-                        label={
-                          <span className={styles.filterToggleLabel}>
-                            {t('auth_files.disabled_filter_only')}
-                          </span>
-                        }
-                      />
-                    </div>
-                    <div className={styles.filterToggleCard}>
-                      <ToggleSwitch
-                        checked={compactMode}
-                        onChange={(value) => setCompactMode(value)}
-                        ariaLabel={t('auth_files.compact_mode_label')}
-                        label={
-                          <span className={styles.filterToggleLabel}>
-                            {t('auth_files.compact_mode_label')}
-                          </span>
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {loading ? (
-              <div className={styles.hint}>{t('common.loading')}</div>
+              renderFilesSkeleton()
             ) : pageItems.length === 0 ? (
-              <EmptyState
-                title={t('auth_files.search_empty_title')}
-                description={t('auth_files.search_empty_desc')}
-              />
+              renderEmptyState()
             ) : (
-              <div
-                className={`${styles.fileGrid} ${quotaFilterType ? styles.fileGridQuotaManaged : ''} ${compactMode ? styles.fileGridCompact : ''}`}
-              >
-                {pageItems.map((file) => (
-                  <AuthFileCard
-                    key={file.name}
-                    file={file}
-                    compact={compactMode}
-                    selected={selectedFiles.has(file.name)}
-                    resolvedTheme={resolvedTheme}
-                    disableControls={disableControls}
-                    deleting={deleting}
-                    statusUpdating={statusUpdating}
-                    quotaFilterType={quotaFilterType}
-                    statusBarCache={statusBarCache}
-                    onShowModels={showModels}
-                    onDownload={handleDownload}
-                    onOpenPrefixProxyEditor={openPrefixProxyEditor}
-                    onDelete={handleDelete}
-                    onToggleStatus={handleStatusToggle}
-                    onToggleSelect={toggleSelect}
-                  />
-                ))}
-              </div>
+              renderFilesTable()
             )}
 
             {!loading && sorted.length > pageSize && (
@@ -872,6 +817,7 @@ export function AuthFilesPage() {
             )}
           </div>
         </div>
+        </CardContent>
       </Card>
 
       <OAuthExcludedCard
@@ -898,6 +844,13 @@ export function AuthFilesPage() {
         onToggleFork={handleToggleFork}
         onRenameAlias={handleRenameAlias}
         onDeleteAlias={handleDeleteAlias}
+      />
+
+      <AuthFileAccountAddDialog
+        open={accountDialogOpen}
+        channel={accountChannel}
+        onOpenChange={setAccountDialogOpen}
+        onCompleted={handleAccountCompleted}
       />
 
       <AuthFileModelsModal

@@ -1,7 +1,17 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Collapsible } from '@/components/ui/Collapsible';
-import { IconPlus, IconX } from '@/components/ui/icons';
+import { AlertCircleIcon, PlusIcon, XIcon } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible } from '@/components/ui/collapsible';
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import type { AmpcodeConfig, AmpcodeModelMapping, AmpcodeUpstreamApiKeyMapping } from '@/types';
 import type { ProviderResource } from '../../types';
 import styles from './sharedForm.module.scss';
@@ -117,31 +127,29 @@ export function AmpcodeForm({
 
   return (
     <form id={formId} className={styles.form} onSubmit={handleSubmit} noValidate>
-      <div className={styles.section}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor={`${fid}-url`}>
+      <FieldGroup className={styles.section}>
+        <Field>
+          <FieldLabel htmlFor={`${fid}-url`}>
             {t('providersPage.ampcode.upstreamUrl')}
-          </label>
-          <input
+          </FieldLabel>
+          <Input
             id={`${fid}-url`}
-            className={styles.input}
             value={form.upstreamUrl}
             onChange={(e) => setForm((s) => ({ ...s, upstreamUrl: e.target.value }))}
             placeholder="https://api.ampcode.com"
             disabled={mutating}
           />
-        </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor={`${fid}-key`}>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${fid}-key`}>
             {t('providersPage.ampcode.upstreamApiKey')}
             <span className={styles.labelHint}>
               {' '}
               · {t('providersPage.ampcode.upstreamApiKeyHint')}
             </span>
-          </label>
-          <input
+          </FieldLabel>
+          <Input
             id={`${fid}-key`}
-            className={styles.input}
             type="password"
             value={form.upstreamApiKey}
             onChange={(e) => setForm((s) => ({ ...s, upstreamApiKey: e.target.value }))}
@@ -151,21 +159,22 @@ export function AmpcodeForm({
             data-bwignore="true"
             disabled={mutating}
           />
-        </div>
+        </Field>
         <label className={styles.checkboxRow}>
-          <input
-            type="checkbox"
-            className={styles.checkboxBox}
+          <Checkbox
             checked={form.forceModelMappings}
             disabled={mutating}
-            onChange={(e) => setForm((s) => ({ ...s, forceModelMappings: e.target.checked }))}
+            onCheckedChange={(value) =>
+              setForm((s) => ({ ...s, forceModelMappings: value === true }))
+            }
+            aria-label={t('providersPage.ampcode.forceModelMappings')}
           />
           <span className={styles.checkboxText}>
             <span>{t('providersPage.ampcode.forceModelMappings')}</span>
             <small>{t('providersPage.ampcode.forceModelMappingsHint')}</small>
           </span>
         </label>
-      </div>
+      </FieldGroup>
 
       <Collapsible label={t('providersPage.ampcode.keyMappingsSection')} defaultOpen>
         <div className={styles.entriesList}>
@@ -173,9 +182,10 @@ export function AmpcodeForm({
             <div key={idx} className={styles.entryCard}>
               <div className={styles.entryCardHeader}>
                 <span>{t('providersPage.ampcode.mappingRow', { index: idx + 1 })}</span>
-                <button
+                <Button
                   type="button"
-                  className={styles.removeBtn}
+                  variant="destructive"
+                  size="icon-sm"
                   disabled={mutating || form.upstreamMappings.length <= 1}
                   onClick={() =>
                     setForm((s) => ({
@@ -183,14 +193,14 @@ export function AmpcodeForm({
                       upstreamMappings: s.upstreamMappings.filter((_, i) => i !== idx),
                     }))
                   }
+                  aria-label={t('common.delete')}
                 >
-                  <IconX size={12} />
-                </button>
+                  <XIcon data-icon="inline-start" />
+                </Button>
               </div>
-              <div className={styles.field}>
-                <label className={styles.label}>{t('providersPage.ampcode.upstreamApiKey')}</label>
-                <input
-                  className={styles.input}
+              <Field>
+                <FieldLabel>{t('providersPage.ampcode.upstreamApiKey')}</FieldLabel>
+                <Input
                   value={m.upstreamApiKey}
                   onChange={(e) =>
                     setForm((s) => ({
@@ -202,17 +212,16 @@ export function AmpcodeForm({
                   }
                   disabled={mutating}
                 />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>
+              </Field>
+              <Field>
+                <FieldLabel>
                   {t('providersPage.ampcode.clientKeys')}
                   <span className={styles.labelHint}>
                     {' '}
                     · {t('providersPage.ampcode.clientKeysHint')}
                   </span>
-                </label>
-                <textarea
-                  className={styles.textarea}
+                </FieldLabel>
+                <Textarea
                   rows={3}
                   value={m.clientKeysText}
                   onChange={(e) =>
@@ -225,12 +234,13 @@ export function AmpcodeForm({
                   }
                   disabled={mutating}
                 />
-              </div>
+              </Field>
             </div>
           ))}
-          <button
+          <Button
             type="button"
-            className={styles.addBtn}
+            variant="secondary"
+            size="sm"
             disabled={mutating}
             onClick={() =>
               setForm((s) => ({
@@ -239,18 +249,17 @@ export function AmpcodeForm({
               }))
             }
           >
-            <IconPlus size={12} />
+            <PlusIcon data-icon="inline-start" />
             <span>{t('providersPage.ampcode.addMapping')}</span>
-          </button>
+          </Button>
         </div>
       </Collapsible>
 
       <Collapsible label={t('providersPage.ampcode.modelMappingsSection')}>
         <div className={styles.entriesList}>
           {form.modelMappings.map((m, idx) => (
-            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8 }}>
-              <input
-                className={styles.input}
+            <div key={idx} className={styles.entryGrid}>
+              <Input
                 placeholder="from"
                 value={m.from}
                 onChange={(e) =>
@@ -263,8 +272,7 @@ export function AmpcodeForm({
                 }
                 disabled={mutating}
               />
-              <input
-                className={styles.input}
+              <Input
                 placeholder="to"
                 value={m.to}
                 onChange={(e) =>
@@ -277,9 +285,10 @@ export function AmpcodeForm({
                 }
                 disabled={mutating}
               />
-              <button
+              <Button
                 type="button"
-                className={styles.removeBtn}
+                variant="destructive"
+                size="icon-sm"
                 disabled={mutating || form.modelMappings.length <= 1}
                 onClick={() =>
                   setForm((s) => ({
@@ -287,14 +296,16 @@ export function AmpcodeForm({
                     modelMappings: s.modelMappings.filter((_, i) => i !== idx),
                   }))
                 }
+                aria-label={t('common.delete')}
               >
-                <IconX size={12} />
-              </button>
+                <XIcon data-icon="inline-start" />
+              </Button>
             </div>
           ))}
-          <button
+          <Button
             type="button"
-            className={styles.addBtn}
+            variant="secondary"
+            size="sm"
             disabled={mutating}
             onClick={() =>
               setForm((s) => ({
@@ -303,13 +314,19 @@ export function AmpcodeForm({
               }))
             }
           >
-            <IconPlus size={12} />
+            <PlusIcon data-icon="inline-start" />
             <span>{t('providersPage.ampcode.addModelMapping')}</span>
-          </button>
+          </Button>
         </div>
       </Collapsible>
 
-      {error ? <div className={styles.errorBox}>{error}</div> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>{t('common.error')}</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
     </form>
   );
 }

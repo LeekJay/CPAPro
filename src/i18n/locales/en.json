@@ -57,13 +57,13 @@
     "unsaved_changes_message": "You have unsaved changes. Leaving now will discard them. Do you want to leave?"
   },
   "title": {
-    "main": "CLI Proxy API Management Center",
-    "login": "CLI Proxy API Management Center",
-    "abbr": "CPAMC"
+    "main": "CPAPro",
+    "login": "CPAPro",
+    "abbr": "CPAPro"
   },
   "splash": {
-    "title": "CLI Proxy API",
-    "subtitle": "Management Center"
+    "title": "CPAPro",
+    "subtitle": "CPAPro, a modern CLIProxyAPI panel."
   },
   "auto_login": {
     "title": "Auto Login in Progress...",
@@ -138,7 +138,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Welcome to CLI Proxy API Management Center",
+    "subtitle": "CPAPro, a modern CLIProxyAPI panel.",
     "openai_providers": "OpenAI Providers",
     "quick_actions": "Quick Actions",
     "current_config": "Current Configuration",
@@ -213,11 +213,15 @@
     "title_section": "Auth Files",
     "description": "Manage all CLI Proxy JSON auth files here (e.g. Qwen, Gemini, Vertex). Uploading a credential immediately enables the corresponding AI integration.",
     "upload_button": "Upload File",
+    "add_account_button": "Add Account",
+    "add_account_channel_button": "Choose account channel",
     "delete_all_button": "Delete All",
     "empty_title": "No Auth Files",
     "empty_desc": "Click the button above to upload the first file",
     "search_empty_title": "No matching files",
     "search_empty_desc": "Try changing the filters or clearing the search box.",
+    "filter_empty_title": "No matching auth files",
+    "filter_empty_desc": "There are no auth files for the selected provider type.",
     "file_size": "Size",
     "file_modified": "Modified",
     "health_status_label": "Health",
@@ -307,7 +311,11 @@
     "type_empty": "Empty",
     "type_unknown": "Other",
     "type_virtual": "Virtual auth file",
+    "table_provider": "Provider Icon",
+    "table_email": "Email",
+    "table_status_control": "Status Control",
     "models_button": "Models",
+    "viewer_button": "Viewer",
     "models_title": "Supported models",
     "models_loading": "Loading model list...",
     "models_empty": "No available models for this credential",
@@ -1072,11 +1080,24 @@
     "refresh_files": "Refresh auth files",
     "refresh_files_and_quota": "Refresh files & quota",
     "refresh_all_credentials": "Refresh all credentials",
-    "card_idle_hint": "Use the top \"Refresh all credentials\" button to fetch the latest quota data."
+    "refresh_section_credentials": "Refresh {{provider}} credentials",
+    "too_many_title": "Too many credentials",
+    "card_idle_hint": "Refresh quota",
+    "provider_type": "Provider Type Badge",
+    "email": "Email",
+    "quota": "Quota",
+    "reset_time": "Reset Time",
+    "empty_title": "No quota credentials",
+    "empty_desc": "No enabled auth files support quota lookup.",
+    "no_quota": "No quota data",
+    "retry_quota": "Retry",
+    "more_quota_items": "+{{count}} more",
+    "refresh_all_success": "Refreshed {{count}} quota entries",
+    "refresh_all_partial": "Quota refresh finished: {{success}} succeeded, {{failed}} failed"
   },
   "system_info": {
     "title": "Management Center Info",
-    "about_title": "CLI Proxy API Management Center",
+    "about_title": "CPAPro",
     "connection_status_title": "Connection Status",
     "api_status_label": "API Status:",
     "config_status_label": "Config Status:",
@@ -1108,7 +1129,7 @@
     "link_main_repo": "Main Repository",
     "link_main_repo_desc": "CLI Proxy API core program source code",
     "link_webui_repo": "WebUI Repository",
-    "link_webui_repo_desc": "Management Center frontend source code",
+    "link_webui_repo_desc": "CPAPro frontend source code",
     "link_docs": "Documentation",
     "link_docs_desc": "Configuration tutorials and guides",
     "clear_login_title": "Local Login Data",
@@ -1216,6 +1237,11 @@
       "providerFamilies": "{{count}} provider families",
       "updatedAt": "Updated {{time}}",
       "issueCount": "{{count}} issues"
+    },
+    "empty": {
+      "loadFailedTitle": "Failed to load provider configuration",
+      "noSnapshotTitle": "Provider configuration has not loaded",
+      "noSnapshotDescription": "Connect to the backend and refresh to view Gemini, Codex, Claude, Vertex, OpenAI compatible, and Amp CLI configuration."
     },
     "actions": {
       "refresh": "Refresh",

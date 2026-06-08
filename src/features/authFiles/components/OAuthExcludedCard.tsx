@@ -1,7 +1,18 @@
 import { useTranslation } from 'react-i18next';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/shadcn-card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import styles from '@/pages/AuthFilesPage.module.scss';
 
 type UnsupportedError = 'unsupported' | null;
@@ -19,22 +30,33 @@ export function OAuthExcludedCard(props: OAuthExcludedCardProps) {
   const { t } = useTranslation();
   const { disableControls, excludedError, excluded, onAdd, onEdit, onDelete } = props;
 
+  const renderEmpty = (title: string, description?: string) => (
+    <Empty className={styles.emptyState}>
+      <EmptyHeader>
+        <EmptyTitle>{title}</EmptyTitle>
+        {description ? <EmptyDescription>{description}</EmptyDescription> : null}
+      </EmptyHeader>
+    </Empty>
+  );
+
   return (
-    <Card
-      title={t('oauth_excluded.title')}
-      extra={
+    <Card className={styles.filesPanel}>
+      <CardHeader className={styles.filesPanelHeader}>
+        <CardTitle>{t('oauth_excluded.title')}</CardTitle>
+        <CardAction className={styles.filesPanelActions}>
         <Button size="sm" onClick={onAdd} disabled={disableControls || excludedError === 'unsupported'}>
           {t('oauth_excluded.add')}
         </Button>
-      }
-    >
+        </CardAction>
+      </CardHeader>
+      <CardContent className={styles.filesPanelContent}>
       {excludedError === 'unsupported' ? (
-        <EmptyState
-          title={t('oauth_excluded.upgrade_required_title')}
-          description={t('oauth_excluded.upgrade_required_desc')}
-        />
+        renderEmpty(
+          t('oauth_excluded.upgrade_required_title'),
+          t('oauth_excluded.upgrade_required_desc')
+        )
       ) : Object.keys(excluded).length === 0 ? (
-        <EmptyState title={t('oauth_excluded.list_empty_all')} />
+        renderEmpty(t('oauth_excluded.list_empty_all'))
       ) : (
         <div className={styles.excludedList}>
           {Object.entries(excluded).map(([provider, models]) => (
@@ -59,6 +81,7 @@ export function OAuthExcludedCard(props: OAuthExcludedCardProps) {
           ))}
         </div>
       )}
+      </CardContent>
     </Card>
   );
 }

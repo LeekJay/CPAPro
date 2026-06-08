@@ -31,19 +31,55 @@
 
 .headerActions {
   display: flex;
-  gap: $spacing-sm;
+  gap: 8px;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   min-width: 0;
   max-width: 100%;
 
-  :global(.btn) {
+  @include mobile {
+    width: 100%;
+    justify-content: stretch;
+
+    button {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+}
+
+.accountButtonGroup {
+  flex: 0 0 auto;
+  min-width: 0;
+
+  button:first-child {
     min-width: 0;
+  }
+
+  button:last-child {
+    flex: 0 0 auto;
+    min-width: 32px;
   }
 
   @include mobile {
     width: 100%;
+
+    button:first-child {
+      flex: 1 1 auto;
+    }
   }
+}
+
+.accountChannelMenu {
+  min-width: 220px;
+}
+
+.accountChannelIcon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: currentColor;
 }
 
 .titleWrapper {
@@ -54,36 +90,51 @@
 }
 
 .countBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 24px;
+  display: inline-grid;
+  place-items: center;
   min-width: 24px;
-  padding: 0 8px;
-  border-radius: 999px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 7px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--count-badge-text);
-  background-color: var(--count-badge-bg);
+  color: var(--muted-foreground);
+  background: var(--muted);
   box-sizing: border-box;
 }
 
-.errorBox {
-  padding: $spacing-md;
-  background-color: rgba($error-color, 0.1);
-  border: 1px solid var(--danger-color);
-  border-radius: $radius-md;
-  color: var(--danger-color);
-  font-size: 14px;
-  margin-bottom: $spacing-md;
+.filesPanel {
+  gap: 0;
+  overflow: hidden;
+  border-color: var(--border);
+}
+
+.filesPanelHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filesPanelActions {
+  align-self: auto;
+  justify-self: end;
+}
+
+.filesPanelContent {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 14px;
 }
 
 // 筛选区域
 .filterSection {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
+  gap: 12px;
 }
 
 .filterRail {
@@ -91,31 +142,13 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
-  background: color-mix(in srgb, var(--bg-secondary) 60%, transparent);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--background);
 
   @include mobile {
     padding: 10px;
   }
-}
-
-.filterAllIconWrap {
-  position: relative;
-  border-color: color-mix(in srgb, var(--primary-color) 20%, var(--border-color));
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--bg-secondary) 94%, var(--primary-color) 8%),
-    color-mix(in srgb, var(--bg-primary) 92%, var(--primary-color) 5%)
-  );
-  box-shadow: 0 10px 22px -18px color-mix(in srgb, var(--primary-color) 50%, transparent);
-}
-
-.filterAllIcon {
-  position: relative;
-  z-index: 1;
-  display: block;
-  color: color-mix(in srgb, var(--primary-color) 70%, var(--text-primary));
 }
 
 .filterContent {
@@ -125,254 +158,182 @@
   min-width: 0;
 }
 
-.filterTags {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.filterTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 12px 7px 8px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-  border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
-  background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
-  color: var(--text-secondary);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    border-color $transition-fast,
-    background-color $transition-fast,
-    color $transition-fast;
-
-  &:hover {
-    border-color: color-mix(in srgb, var(--filter-color) 40%, var(--border-color));
-    background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
-    color: var(--text-primary);
-  }
-}
-
-.filterTagActive {
-  border-color: color-mix(in srgb, var(--filter-color) 50%, var(--border-color));
-  background: color-mix(in srgb, var(--filter-surface) 22%, var(--bg-secondary));
-  color: var(--text-primary);
-
-  .filterTagIconWrap {
-    border-color: color-mix(in srgb, var(--filter-color) 40%, transparent);
-  }
-}
-
-.filterTagLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+.providerTabs {
   min-width: 0;
+  overflow-x: auto;
 }
 
-.filterTagIconWrap {
-  width: 24px;
-  height: 24px;
+.providerTabsList {
+  width: max-content;
+  max-width: none;
+  justify-content: flex-start;
+}
+
+.providerTabsTrigger {
   flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
-  background: color-mix(in srgb, var(--bg-tertiary) 60%, transparent);
+  min-width: max-content;
 }
 
-.filterTagIcon {
+.providerTabsIcon {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
-  object-fit: contain;
+  color: currentColor;
 }
 
-.filterTagIconFallback {
-  color: var(--filter-color);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
+.providerTabsLabel {
+  white-space: nowrap;
 }
 
-.filterTagText {
-  min-width: 0;
-  color: inherit;
-  @include text-ellipsis;
-}
-
-.filterTagCount {
+.providerTabsCount {
   display: inline-grid;
   place-items: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--filter-color) 12%, transparent);
-  color: var(--text-tertiary);
+  background: var(--background);
+  color: var(--muted-foreground);
   font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  flex: 0 0 auto;
-  line-height: 1;
+}
+
+.tablePanel {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.tableSkeleton {
+  display: flex;
+  flex-direction: column;
+}
+
+.tableSkeletonRow {
+  display: grid;
+  grid-template-columns: 32px 72px minmax(220px, 1fr) 152px 132px;
+  gap: 12px;
+  align-items: center;
+  min-width: 640px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.tableSkeletonCheck {
+  width: 18px;
+  height: 18px;
+}
+
+.tableSkeletonFile,
+.tableSkeletonHealth {
+  height: 34px;
+}
+
+.tableSkeletonState,
+.tableSkeletonActions {
+  height: 24px;
+}
+
+.emptyState {
+  min-height: 220px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--background);
+}
+
+.authFilesTable {
+  min-width: 680px;
+}
+
+.tableSelectCol {
+  width: 44px;
+  min-width: 44px;
+}
+
+.providerIconHead,
+.providerIconCell {
+  width: 84px;
   text-align: center;
 }
 
-.filterTagActive .filterTagCount {
-  background: color-mix(in srgb, var(--filter-color) 22%, transparent);
-  color: var(--filter-color);
+.tableActionsHead,
+.tableActionsCell {
+  text-align: right;
 }
 
-.filterControlsPanel {
-  position: relative;
-  overflow: hidden;
-  padding: 16px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--primary-color) 8%, transparent),
-      transparent 46%
-    ),
-    color-mix(in srgb, var(--bg-secondary) 56%, transparent);
-
-  @include mobile {
-    padding: 12px;
-  }
+.statusControlHead,
+.statusControlCell {
+  width: 140px;
+  text-align: right;
 }
 
-.filterControls {
-  display: grid;
-  grid-template-columns:
-    minmax(260px, 1fr)
-    minmax(108px, 0.35fr)
-    minmax(148px, 0.45fr);
-  gap: 12px;
-  align-items: flex-end;
-
-  // 修复 Input 组件在 filterItem 中的嵌套样式
-  :global(.form-group) {
-    margin: 0;
-  }
-
-  :global(.input) {
-    height: 42px;
-    box-sizing: border-box;
-  }
-
-  @include tablet {
-    grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(140px, 0.8fr));
-  }
-
-  @include mobile {
-    grid-template-columns: 1fr;
-  }
+.tableRowDisabled {
+  opacity: 0.72;
 }
 
-.filterSearchItem {
-  min-width: 0;
-}
-
-.filterItem {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-
-  label {
-    font-size: 11px;
-    color: var(--text-tertiary);
-    font-weight: 700;
-    letter-spacing: 0;
-    white-space: nowrap;
-  }
-}
-
-.filterToggleItem {
-  min-width: 0;
-  grid-column: 1 / -1;
-
-  @include tablet {
-    grid-column: 1 / -1;
-  }
-}
-
-.filterToggleGroup {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  min-height: 42px;
-
-  @include mobile {
-    grid-template-columns: 1fr;
-  }
-}
-
-.filterToggleCard {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  min-height: 42px;
-  padding: 0 10px;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
-  background: color-mix(in srgb, var(--bg-primary) 56%, transparent);
-
-  > label {
-    width: 100%;
-    min-width: 0;
-  }
-}
-
-.filterToggle {
-  display: flex;
-  align-items: center;
-  min-height: 40px;
-  padding-inline: 2px;
-}
-
-.filterToggleLabel {
+.tableProviderAvatar {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
   display: inline-flex;
   align-items: center;
-  color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-.searchInput {
-  padding-right: 40px;
-}
-
-.searchIcon {
-  display: block;
-  color: var(--text-tertiary);
-  pointer-events: none;
-}
-
-.pageSizeSelect {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+  justify-content: center;
   border-radius: 8px;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 14px;
-  cursor: text;
-  height: 42px;
-  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 700;
+  margin-inline: auto;
+}
 
-  &:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 12%, transparent);
+.tableProviderIcon {
+  width: 18px;
+  height: 18px;
+  color: currentColor;
+}
+
+.emailCell {
+  min-width: 220px;
+}
+
+.emailValue {
+  min-width: 0;
+  @include text-ellipsis;
+  display: inline-block;
+  max-width: min(42vw, 460px);
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.tableEmptyValue {
+  color: var(--muted-foreground);
+}
+
+.tableActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.quotaDetailRow {
+  background: color-mix(in srgb, var(--muted) 58%, transparent);
+
+  td {
+    white-space: normal;
+  }
+
+  .quotaSection {
+    margin: 0;
+    padding: $spacing-sm 0;
+    border-top: 0;
   }
 }
 
@@ -1799,16 +1760,14 @@
 .viewModeSwitch {
   display: inline-flex;
   align-items: center;
-  gap: $spacing-xs;
-  flex-wrap: wrap;
   min-width: 0;
   max-width: 100%;
   padding: 2px;
-  border-radius: $radius-md;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--background);
+  border: 1px solid var(--border);
 
-  :global(.btn.btn-sm) {
+  :global([data-slot='toggle-group-item']) {
     min-width: 0;
   }
 }
@@ -1823,7 +1782,7 @@
     justify-content: stretch;
   }
 
-  .viewModeSwitch :global(.btn.btn-sm) {
+  .viewModeSwitch :global([data-slot='toggle-group-item']) {
     flex: 1 1 0;
   }
 }

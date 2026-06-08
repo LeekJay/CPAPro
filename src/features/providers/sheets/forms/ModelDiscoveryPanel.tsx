@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  IconLoader2,
-  IconRefreshCw,
-  IconSearch,
-} from '@/components/ui/icons';
-import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
+  RefreshCwIcon,
+  SearchIcon,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import type { ModelInfo } from '@/utils/models';
 import styles from './sharedForm.module.scss';
 
@@ -82,33 +83,26 @@ export function ModelDiscoveryPanel({
     <div className={styles.discoveryPanel}>
       <div className={styles.discoveryToolbar}>
         <div className={styles.discoverySearchWrap}>
-          <span className={styles.discoverySearchIcon} aria-hidden="true">
-            <IconSearch size={14} />
-          </span>
-          <input
+          <Input
             type="search"
             className={styles.discoverySearch}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('providersPage.discovery.searchPlaceholder')}
+            rightElement={<SearchIcon data-icon="inline-end" />}
           />
         </div>
-        <button
-          type="button"
-          className={styles.connectivityBtn}
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={onReload}
           disabled={loading}
+          loading={loading}
           aria-label={t('providersPage.discovery.reload')}
         >
-          {loading ? (
-            <span className={`${styles.statusIcon} ${styles.statusIconLoading}`}>
-              <IconLoader2 size={14} />
-            </span>
-          ) : (
-            <IconRefreshCw size={14} />
-          )}
+          {!loading && <RefreshCwIcon data-icon="inline-start" />}
           <span>{t('providersPage.discovery.reload')}</span>
-        </button>
+        </Button>
       </div>
 
       {loading && !models.length ? (
@@ -124,18 +118,25 @@ export function ModelDiscoveryPanel({
       ) : models.length ? (
         <>
           <div className={styles.discoveryBatchRow}>
-            <SelectionCheckbox
-              checked={allSelectableChecked}
-              onChange={toggleAll}
-              disabled={selectable.length === 0}
-              label={
+            <label className={styles.discoveryCheckboxRow}>
+              <Checkbox
+                checked={allSelectableChecked}
+                onCheckedChange={toggleAll}
+                disabled={selectable.length === 0}
+                aria-label={
+                  allSelectableChecked
+                    ? t('providersPage.discovery.clearAll')
+                    : t('providersPage.discovery.selectAll')
+                }
+              />
+              <span className={styles.discoveryCheckboxText}>
                 <span className={styles.discoveryBatchLabel}>
                   {allSelectableChecked
                     ? t('providersPage.discovery.clearAll')
                     : t('providersPage.discovery.selectAll')}
                 </span>
-              }
-            />
+              </span>
+            </label>
             <span className={styles.discoveryCount}>
               {t('providersPage.discovery.selectedCount', {
                 selected: selected.size,
@@ -163,13 +164,16 @@ export function ModelDiscoveryPanel({
                       </span>
                     </>
                   ) : (
-                    <SelectionCheckbox
-                      checked={selected.has(m.name)}
-                      onChange={() => toggle(m.name)}
-                      label={
+                    <label className={styles.discoveryCheckboxRow}>
+                      <Checkbox
+                        checked={selected.has(m.name)}
+                        onCheckedChange={() => toggle(m.name)}
+                        aria-label={m.name}
+                      />
+                      <span className={styles.discoveryCheckboxText}>
                         <span className={styles.discoveryName}>{m.name}</span>
-                      }
-                    />
+                      </span>
+                    </label>
                   )}
                 </li>
               );
@@ -183,22 +187,21 @@ export function ModelDiscoveryPanel({
       )}
 
       <div className={styles.discoveryFooter}>
-        <button
-          type="button"
-          className={styles.connectivityBtnGhost}
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={onClose}
           disabled={mutating}
         >
           {t('providersPage.discovery.close')}
-        </button>
-        <button
-          type="button"
-          className={styles.discoveryApplyBtn}
+        </Button>
+        <Button
+          size="sm"
           onClick={handleApply}
           disabled={mutating || selected.size === 0}
         >
           {t('providersPage.discovery.apply', { count: selected.size })}
-        </button>
+        </Button>
       </div>
     </div>
   );

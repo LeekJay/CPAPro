@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish, for example v1.2.3'
+        required: true
+        type: string
 
 jobs:
   build-and-release:
@@ -12,17 +18,15 @@ jobs:
     permissions:
       contents: write
 
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -35,31 +39,40 @@ jobs:
       - name: Build all-in-one HTML
         run: bun run build
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ env.RELEASE_TAG }}
 
-      - name: Prepare release assets
+      - name: Verify release asset
         run: |
-          cd dist
-          mv index.html management.html
-          ls -lh management.html
+          test -f dist/management.html
+          test ! -f dist/index.html
+          ls -lh dist/management.html
+
+      - name: Upload management.html artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: management-html
+          path: dist/management.html
+          if-no-files-found: error
 
       - name: Generate release notes
         run: |
           set -euo pipefail
-          current_tag="${GITHUB_REF_NAME}"
+          current_tag="${RELEASE_TAG}"
           previous_tag="$(git tag --list 'v*' --sort=-v:refname | grep -v "^${current_tag}$" | head -n 1 || true)"
-          if [ -n "${previous_tag}" ]; then
+
+          if git rev-parse --verify "${current_tag}^{commit}" >/dev/null 2>&1 && [ -n "${previous_tag}" ]; then
             range="${previous_tag}..${current_tag}"
+            git log --pretty=format:"- %h %s" "${range}" > release-notes.md
+          elif git rev-parse --verify "${current_tag}^{commit}" >/dev/null 2>&1; then
+            git log --pretty=format:"- %h %s" "${current_tag}" > release-notes.md
           else
-            range="${current_tag}"
+            echo "- Manual release for ${current_tag}" > release-notes.md
           fi
 
-          : > release-notes.md
-          git log --pretty=format:"- %h %s" "${range}" >> release-notes.md
-
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           files: dist/management.html
           body_path: release-notes.md
           draft: false

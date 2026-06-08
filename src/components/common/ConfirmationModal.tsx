@@ -1,6 +1,14 @@
 import { useTranslation } from 'react-i18next';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useNotificationStore } from '@/stores';
 
 export function ConfirmationModal() {
@@ -16,6 +24,8 @@ export function ConfirmationModal() {
   }
 
   const { title, message, onConfirm, onCancel, confirmText, cancelText, variant = 'primary' } = options;
+  const actionVariant =
+    variant === 'danger' ? 'destructive' : variant === 'secondary' ? 'secondary' : 'default';
 
   const handleConfirm = async () => {
     try {
@@ -42,24 +52,43 @@ export function ConfirmationModal() {
   };
 
   return (
-    <Modal open={isOpen} onClose={handleCancel} title={title} closeDisabled={isLoading}>
-      {typeof message === 'string' ? (
-        <p style={{ margin: '1rem 0' }}>{message}</p>
-      ) : (
-        <div style={{ margin: '1rem 0' }}>{message}</div>
-      )}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
-        <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>
-          {cancelText || t('common.cancel')}
-        </Button>
-        <Button 
-          variant={variant} 
-          onClick={handleConfirm} 
-          loading={isLoading}
-        >
-          {confirmText || t('common.confirm')}
-        </Button>
-      </div>
-    </Modal>
+    <AlertDialog
+      open={isOpen}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && !isLoading) {
+          handleCancel();
+        }
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title || t('common.confirm')}</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            {typeof message === 'string' ? <p>{message}</p> : <div>{message}</div>}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            disabled={isLoading}
+            onClick={(event) => {
+              event.preventDefault();
+              handleCancel();
+            }}
+          >
+            {cancelText || t('common.cancel')}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            variant={actionVariant}
+            disabled={isLoading}
+            onClick={(event) => {
+              event.preventDefault();
+              void handleConfirm();
+            }}
+          >
+            {isLoading ? t('common.loading') : confirmText || t('common.confirm')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

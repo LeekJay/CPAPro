@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { ReactElement, ReactNode } from 'react';
 import type { TFunction } from 'i18next';
 import type { AuthFileItem, ResolvedTheme, ThemeColors } from '@/types';
+import { Button } from '@/components/ui/button';
 import { TYPE_COLORS } from '@/utils/quota';
 import styles from '@/pages/QuotaPage.module.scss';
 
@@ -125,14 +126,16 @@ export function QuotaCard<TState extends QuotaStatusState>({
           <div className={styles.quotaMessage}>{t(`${i18nPrefix}.loading`)}</div>
         ) : quotaStatus === 'idle' ? (
           onRefresh ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className={`${styles.quotaMessage} ${styles.quotaMessageAction}`}
               onClick={onRefresh}
               disabled={!canRefresh}
             >
               {t(idleMessageKey)}
-            </button>
+            </Button>
           ) : (
             <div className={styles.quotaMessage}>{t(idleMessageKey)}</div>
           )

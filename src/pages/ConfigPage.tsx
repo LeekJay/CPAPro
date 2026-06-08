@@ -1,27 +1,49 @@
-import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { createPortal } from 'react-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
-import { parse as parseYaml, parseDocument } from 'yaml';
-import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import {
-  IconCheck,
-  IconChevronDown,
-  IconChevronUp,
-  IconRefreshCw,
-  IconSearch,
-} from '@/components/ui/icons';
-import { VisualConfigEditor } from '@/components/config/VisualConfigEditor';
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  RefreshCwIcon,
+  SearchIcon,
+  SlidersHorizontalIcon,
+  TerminalSquareIcon,
+} from 'lucide-react';
+import { parse as parseYaml, parseDocument } from 'yaml';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+} from '@/components/ui/shadcn-card';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { VisualConfigEditor, type VisualSectionId } from '@/components/config/VisualConfigEditor';
 import { DiffModal } from '@/components/config/DiffModal';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useVisualConfig } from '@/hooks/useVisualConfig';
 import { useNotificationStore, useAuthStore, useThemeStore, useConfigStore } from '@/stores';
 import { configFileApi } from '@/services/api/configFile';
 import styles from './ConfigPage.module.scss';
 
 type ConfigEditorTab = 'visual' | 'source';
+type ConfigRouteSection = VisualSectionId | 'source';
+
+const VISUAL_CONFIG_SECTION_IDS: VisualSectionId[] = [
+  'server',
+  'auth',
+  'system',
+  'quota',
+  'streaming',
+  'payload',
+];
+
+const isVisualConfigSectionId = (value: string | undefined): value is VisualSectionId =>
+  VISUAL_CONFIG_SECTION_IDS.includes(value as VisualSectionId);
 
 const LazyConfigSourceEditor = lazy(() => import('@/components/config/ConfigSourceEditor'));
 
@@ -46,13 +68,17 @@ function normalizeYamlForVisualDiff(yamlContent: string): string {
 
 export function ConfigPage() {
   const { t } = useTranslation();
-  const pageTransitionLayer = usePageTransitionLayer();
-  const isCurrentLayer = pageTransitionLayer ? pageTransitionLayer.isCurrentLayer : true;
+  const navigate = useNavigate();
+  const { sectionId } = useParams<{ sectionId?: string }>();
   const showNotification = useNotificationStore((state) => state.showNotification);
   const showConfirmation = useNotificationStore((state) => state.showConfirmation);
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  const routeSection: ConfigRouteSection = sectionId === 'source' ? 'source' : isVisualConfigSectionId(sectionId) ? sectionId : 'server';
+  const invalidSection = Boolean(sectionId) && sectionId !== 'source' && !isVisualConfigSectionId(sectionId);
+  const activeTab: ConfigEditorTab = routeSection === 'source' ? 'source' : 'visual';
+  const activeVisualSection: VisualSectionId = routeSection === 'source' ? 'server' : routeSection;
 
   const {
     visualValues,
@@ -65,20 +91,14 @@ export function ConfigPage() {
     setVisualValues,
   } = useVisualConfig();
 
-  const [activeTab, setActiveTab] = useState<ConfigEditorTab>(() => {
-    const saved = localStorage.getItem('config-management:tab');
-    if (saved === 'visual' || saved === 'source') return saved;
-    return 'visual';
-  });
-
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
   const [diffModalOpen, setDiffModalOpen] = useState(false);
   const [serverYaml, setServerYaml] = useState('');
   const [mergedYaml, setMergedYaml] = useState('');
+  const lastVisualParseNotificationRef = useRef('');
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,11 +108,9 @@ export function ConfigPage() {
   });
   const [lastSearchedQuery, setLastSearchedQuery] = useState('');
   const editorRef = useRef<ReactCodeMirrorRef | null>(null);
-  const floatingActionsRef = useRef<HTMLDivElement>(null);
 
   const disableControls = connectionStatus !== 'connected';
   const isDirty = dirty || visualDirty;
-  const shouldRenderFloatingActions = isCurrentLayer;
   const hasVisualModeError = !!visualParseError;
   const hasVisualValidationErrors =
     activeTab === 'visual' &&
@@ -100,7 +118,6 @@ export function ConfigPage() {
 
   const loadConfig = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const data = await configFileApi.fetchConfigYaml();
       setContent(data);
@@ -111,26 +128,34 @@ export function ConfigPage() {
       loadVisualValuesFromYaml(data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t('notification.refresh_failed');
-      setError(message);
+      showNotification(message, 'error');
     } finally {
       setLoading(false);
     }
-  }, [loadVisualValuesFromYaml, t]);
+  }, [loadVisualValuesFromYaml, showNotification, t]);
 
   useEffect(() => {
     loadConfig();
   }, [loadConfig]);
 
   useEffect(() => {
-    if (activeTab !== 'visual' || !visualParseError) return;
+    if (!visualParseError) {
+      lastVisualParseNotificationRef.current = '';
+      return;
+    }
 
-    setActiveTab('source');
-    localStorage.setItem('config-management:tab', 'source');
-    showNotification(
-      t('config_management.visual_mode_unavailable_detail', { message: visualParseError }),
-      'error'
-    );
-  }, [activeTab, showNotification, t, visualParseError]);
+    if (activeTab === 'visual') {
+      navigate('/config/source', { replace: true });
+    }
+
+    if (lastVisualParseNotificationRef.current !== visualParseError) {
+      lastVisualParseNotificationRef.current = visualParseError;
+      showNotification(
+        t('config_management.visual_mode_unavailable_detail', { message: visualParseError }),
+        'error'
+      );
+    }
+  }, [activeTab, navigate, showNotification, t, visualParseError]);
 
   const handleConfirmSave = async () => {
     setSaving(true);
@@ -271,6 +296,7 @@ export function ConfigPage() {
             setDirty(true);
           }
         }
+        navigate('/config/source');
       } else {
         const result = loadVisualValuesFromYaml(content);
         if (!result.ok) {
@@ -280,16 +306,16 @@ export function ConfigPage() {
           );
           return;
         }
+        navigate(`/config/${activeVisualSection}`);
       }
-
-      setActiveTab(tab);
-      localStorage.setItem('config-management:tab', tab);
     },
     [
       activeTab,
+      activeVisualSection,
       applyVisualChangesToYaml,
       content,
       loadVisualValuesFromYaml,
+      navigate,
       showNotification,
       t,
       visualDirty,
@@ -401,66 +427,6 @@ export function ConfigPage() {
     performSearch(lastSearchedQuery, 'next');
   }, [lastSearchedQuery, performSearch]);
 
-  // Keep bottom floating actions from covering page content by syncing its height to a CSS variable.
-  useLayoutEffect(() => {
-    if (typeof window === 'undefined' || !shouldRenderFloatingActions) return;
-
-    const actionsEl = floatingActionsRef.current;
-    if (!actionsEl) return;
-
-    const updatePadding = () => {
-      const height = actionsEl.getBoundingClientRect().height;
-      document.documentElement.style.setProperty('--config-action-bar-height', `${height}px`);
-    };
-
-    updatePadding();
-    window.addEventListener('resize', updatePadding);
-
-    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updatePadding);
-    ro?.observe(actionsEl);
-
-    return () => {
-      ro?.disconnect();
-      window.removeEventListener('resize', updatePadding);
-      document.documentElement.style.removeProperty('--config-action-bar-height');
-    };
-  }, [shouldRenderFloatingActions]);
-
-  // Status text
-  const getStatusText = () => {
-    if (disableControls) return t('config_management.status_disconnected');
-    if (loading) return t('config_management.status_loading');
-    if (error) return t('config_management.status_load_failed');
-    if (hasVisualModeError) return t('config_management.visual_mode_unavailable');
-    if (hasVisualValidationErrors)
-      return t('config_management.visual.validation.validation_blocked');
-    if (saving) return t('config_management.status_saving');
-    if (isDirty) return t('config_management.status_dirty');
-    return t('config_management.status_loaded');
-  };
-
-  const getStatusClass = () => {
-    if (error || hasVisualModeError || hasVisualValidationErrors) return styles.error;
-    if (isDirty) return styles.modified;
-    if (!loading && !saving) return styles.saved;
-    return '';
-  };
-
-  const getFloatingStatusText = () => {
-    if (!isMobile) return getStatusText();
-    if (disableControls)
-      return t('config_management.status_disconnected_short', { defaultValue: 'Disconnected' });
-    if (loading) return t('config_management.status_loading_short', { defaultValue: 'Loading' });
-    if (error) return t('config_management.status_load_failed_short', { defaultValue: 'Failed' });
-    if (hasVisualModeError)
-      return t('config_management.visual_mode_unavailable_short', { defaultValue: 'YAML issue' });
-    if (hasVisualValidationErrors)
-      return t('config_management.visual.validation_blocked_short', { defaultValue: 'Fix errors' });
-    if (saving) return t('config_management.status_saving_short', { defaultValue: 'Saving' });
-    if (isDirty) return t('config_management.status_dirty_short', { defaultValue: 'Unsaved' });
-    return t('config_management.status_loaded_short', { defaultValue: 'Loaded' });
-  };
-
   const handleReload = useCallback(() => {
     if (!isDirty) {
       void loadConfig();
@@ -479,29 +445,22 @@ export function ConfigPage() {
     });
   }, [isDirty, loadConfig, showConfirmation, t]);
 
-  const floatingActions = (
-    <div className={styles.floatingActionContainer} ref={floatingActionsRef}>
-      <div className={styles.floatingActionList}>
-        <div
-          className={`${styles.floatingStatus} ${
-            isMobile ? styles.floatingStatusCompact : ''
-          } ${getStatusClass()}`}
-        >
-          {getFloatingStatusText()}
-        </div>
-        <button
+  const pageActions = useMemo(
+    () => (
+      <div className={styles.pageActions}>
+        <Button
           type="button"
-          className={styles.floatingActionButton}
+          variant="outline"
+          size="sm"
           onClick={handleReload}
           disabled={loading || saving}
-          title={t('config_management.reload')}
-          aria-label={t('config_management.reload')}
         >
-          <IconRefreshCw size={16} />
-        </button>
-        <button
+          <RefreshCwIcon data-icon="inline-start" className={loading ? styles.spinIcon : undefined} />
+          {t('config_management.reload')}
+        </Button>
+        <Button
           type="button"
-          className={styles.floatingActionButton}
+          size="sm"
           onClick={handleSave}
           disabled={
             disableControls ||
@@ -512,143 +471,187 @@ export function ConfigPage() {
             hasVisualModeError ||
             hasVisualValidationErrors
           }
-          title={t('config_management.save')}
-          aria-label={t('config_management.save')}
         >
-          <IconCheck size={16} />
-          {isDirty && <span className={styles.dirtyDot} aria-hidden="true" />}
-        </button>
+          <CheckIcon data-icon="inline-start" />
+          {t('config_management.save')}
+        </Button>
+      </div>
+    ),
+    [
+      diffModalOpen,
+      disableControls,
+      handleReload,
+      handleSave,
+      hasVisualModeError,
+      hasVisualValidationErrors,
+      isDirty,
+      loading,
+      saving,
+      t,
+    ]
+  );
+
+  const configSkeleton = (
+    <div className={styles.configSkeleton} aria-label={t('config_management.status_loading')}>
+      <div className={styles.skeletonHeader}>
+        <Skeleton className={styles.skeletonTitle} />
+        <Skeleton className={styles.skeletonAction} />
+      </div>
+      <div className={styles.skeletonGrid}>
+        {Array.from({ length: 6 }, (_, index) => (
+          <div key={index} className={styles.skeletonPanel}>
+            <Skeleton className={styles.skeletonLineWide} />
+            <Skeleton className={styles.skeletonLine} />
+            <Skeleton className={styles.skeletonControl} />
+          </div>
+        ))}
       </div>
     </div>
   );
+
+  if (invalidSection) {
+    return <Navigate to="/config/server" replace />;
+  }
 
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
         <div className={styles.pageHeaderCopy}>
           <h1 className={styles.pageTitle}>{t('config_management.title')}</h1>
-          <div className={styles.tabBar}>
-            <button
-              type="button"
-              className={`${styles.tabItem} ${activeTab === 'visual' ? styles.tabActive : ''}`}
-              onClick={() => handleTabChange('visual')}
-              disabled={saving || loading}
-            >
-              {t('config_management.tabs.visual', { defaultValue: '可视化编辑' })}
-            </button>
-            <button
-              type="button"
-              className={`${styles.tabItem} ${activeTab === 'source' ? styles.tabActive : ''}`}
-              onClick={() => handleTabChange('source')}
-              disabled={saving || loading}
-            >
-              {t('config_management.tabs.source', { defaultValue: '源代码编辑' })}
-            </button>
-          </div>
+          <p className={styles.pageDescription}>{t('config_management.description')}</p>
         </div>
       </div>
 
-      <div className={styles.workspaceShell}>
-        <div className={styles.content}>
-          {error && <div className="error-box">{error}</div>}
-          {!error && visualParseError && (
-            <div className="error-box">
-              {t('config_management.visual_mode_unavailable_detail', { message: visualParseError })}
-            </div>
-          )}
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => handleTabChange(value as ConfigEditorTab)}
+        className={styles.workspaceTabs}
+      >
+        <Card className={styles.workspaceShell}>
+          <CardHeader className={styles.workspaceHeader}>
+            <CardAction className={styles.tabsAction}>
+              <TabsList className={styles.tabsList}>
+                <TabsTrigger value="visual" disabled={saving || loading}>
+                  <SlidersHorizontalIcon data-icon="inline-start" />
+                  {t('config_management.tabs.visual', { defaultValue: '可视化编辑' })}
+                </TabsTrigger>
+                <TabsTrigger value="source" disabled={saving || loading}>
+                  <TerminalSquareIcon data-icon="inline-start" />
+                  {t('config_management.tabs.source', { defaultValue: '源代码编辑' })}
+                </TabsTrigger>
+              </TabsList>
+            </CardAction>
+          </CardHeader>
 
-          {activeTab === 'visual' ? (
-            <VisualConfigEditor
-              values={visualValues}
-              validationErrors={visualValidationErrors}
-              hasPayloadValidationErrors={visualHasPayloadValidationErrors}
-              disabled={disableControls || loading}
-              onChange={setVisualValues}
-            />
-          ) : (
-            <div className={styles.sourceWorkspace}>
-              <div className={styles.sourceToolbar}>
-                <div className={styles.searchInputWrapper}>
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    onKeyDown={handleSearchKeyDown}
-                    placeholder={t('config_management.search_placeholder', {
-                      defaultValue: '搜索配置内容...',
-                    })}
-                    disabled={disableControls || loading}
-                    className={styles.searchInput}
-                    rightElement={
-                      <div className={styles.searchRight}>
-                        {searchQuery && lastSearchedQuery === searchQuery && (
-                          <span className={styles.searchCount}>
-                            {searchResults.total > 0
-                              ? `${searchResults.current} / ${searchResults.total}`
-                              : t('config_management.search_no_results', {
-                                  defaultValue: '无结果',
-                                })}
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          className={styles.searchButton}
-                          onClick={() => executeSearch('next')}
-                          disabled={!searchQuery || disableControls || loading}
-                          title={t('config_management.search_button', { defaultValue: '搜索' })}
-                        >
-                          <IconSearch size={16} />
-                        </button>
-                      </div>
-                    }
-                  />
+          <CardContent className={styles.content}>
+            <TabsContent value="visual" className={styles.tabContent}>
+              {loading ? (
+                configSkeleton
+              ) : (
+                <VisualConfigEditor
+                  activeSectionId={activeVisualSection}
+                  values={visualValues}
+                  validationErrors={visualValidationErrors}
+                  hasPayloadValidationErrors={visualHasPayloadValidationErrors}
+                  disabled={disableControls || loading}
+                  pageActions={pageActions}
+                  onChange={setVisualValues}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="source" className={styles.tabContent}>
+              {loading ? (
+                configSkeleton
+              ) : (
+                <div className={styles.sourceWorkspace}>
+                <div className={styles.sourceToolbar}>
+                  <div className={styles.searchInputWrapper}>
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      onKeyDown={handleSearchKeyDown}
+                      placeholder={t('config_management.search_placeholder', {
+                        defaultValue: '搜索配置内容...',
+                      })}
+                      disabled={disableControls || loading}
+                      className={styles.searchInput}
+                      rightElement={
+                        <div className={styles.searchRight}>
+                          {searchQuery && lastSearchedQuery === searchQuery && (
+                            <Badge variant="outline" className={styles.searchCount}>
+                              {searchResults.total > 0
+                                ? `${searchResults.current} / ${searchResults.total}`
+                                : t('config_management.search_no_results', {
+                                    defaultValue: '无结果',
+                                  })}
+                            </Badge>
+                          )}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => executeSearch('next')}
+                            disabled={!searchQuery || disableControls || loading}
+                            title={t('config_management.search_button', { defaultValue: '搜索' })}
+                          >
+                            <SearchIcon />
+                          </Button>
+                        </div>
+                      }
+                    />
+                  </div>
+
+                  <div className={styles.searchActions}>
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      onClick={handlePrevMatch}
+                      disabled={
+                        !searchQuery ||
+                        lastSearchedQuery !== searchQuery ||
+                        searchResults.total === 0
+                      }
+                      title={t('config_management.search_prev', { defaultValue: '上一个' })}
+                    >
+                      <ChevronUpIcon />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      onClick={handleNextMatch}
+                      disabled={
+                        !searchQuery ||
+                        lastSearchedQuery !== searchQuery ||
+                        searchResults.total === 0
+                      }
+                      title={t('config_management.search_next', { defaultValue: '下一个' })}
+                    >
+                      <ChevronDownIcon />
+                    </Button>
+                  </div>
+                  <div className={styles.sourcePageActions}>{pageActions}</div>
                 </div>
 
-                <div className={styles.searchActions}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handlePrevMatch}
-                    disabled={
-                      !searchQuery || lastSearchedQuery !== searchQuery || searchResults.total === 0
-                    }
-                    title={t('config_management.search_prev', { defaultValue: '上一个' })}
-                  >
-                    <IconChevronUp size={16} />
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleNextMatch}
-                    disabled={
-                      !searchQuery || lastSearchedQuery !== searchQuery || searchResults.total === 0
-                    }
-                    title={t('config_management.search_next', { defaultValue: '下一个' })}
-                  >
-                    <IconChevronDown size={16} />
-                  </Button>
+                <div className={styles.editorWrapper}>
+                  <Suspense fallback={configSkeleton}>
+                    <LazyConfigSourceEditor
+                      editorRef={editorRef}
+                      value={content}
+                      onChange={handleChange}
+                      theme={resolvedTheme}
+                      editable={!disableControls && !loading}
+                      placeholder={t('config_management.editor_placeholder')}
+                    />
+                  </Suspense>
                 </div>
-              </div>
+                </div>
+              )}
+            </TabsContent>
+          </CardContent>
+        </Card>
+      </Tabs>
 
-              <div className={styles.editorWrapper}>
-                <Suspense fallback={null}>
-                  <LazyConfigSourceEditor
-                    editorRef={editorRef}
-                    value={content}
-                    onChange={handleChange}
-                    theme={resolvedTheme}
-                    editable={!disableControls && !loading}
-                    placeholder={t('config_management.editor_placeholder')}
-                  />
-                </Suspense>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {shouldRenderFloatingActions && typeof document !== 'undefined'
-        ? createPortal(floatingActions, document.body)
-        : null}
       <DiffModal
         open={diffModalOpen}
         original={serverYaml}

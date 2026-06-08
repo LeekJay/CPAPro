@@ -1,4 +1,6 @@
-# CLI Proxy API Management Center
+# CPAPro
+
+CPAPro, a modern CLIProxyAPI panel.
 
 A single-file Web UI (React + TypeScript) for operating and troubleshooting the **CLI Proxy API** via its **Management API** (config, credentials, and logs).
 
@@ -41,11 +43,11 @@ bun install --frozen-lockfile
 bun run build
 ```
 
-- Output: `dist/index.html` (all assets are inlined).
-- For CLI Proxy API bundling, the release workflow renames it to `management.html`.
+- Output: `dist/management.html` (all assets are inlined).
+- The release workflow publishes `management.html`.
 - To preview locally: `bun run preview`
 
-Tip: opening `dist/index.html` via `file://` may be blocked by browser CORS; serving it (preview/static server) is more reliable.
+Tip: opening `dist/management.html` via `file://` may be blocked by browser CORS; serving it (preview/static server) is more reliable.
 
 ## Connecting to the server
 
@@ -116,7 +118,7 @@ The UI language is automatically detected from browser settings and can be manua
 
 ## Build & release notes
 
-- Vite produces a **single HTML** output (`dist/index.html`) with all assets inlined (via `vite-plugin-singlefile`).
+- Vite produces a **single HTML** output (`dist/management.html`) with all assets inlined (via `vite-plugin-singlefile`).
 - Tagging `vX.Y.Z` triggers `.github/workflows/release.yml` to publish `dist/management.html`.
 - The UI version shown on the System page is injected at build time (env `VERSION`, git tag, or `package.json` fallback).
 
@@ -154,4 +156,4 @@ Issues and PRs are welcome. Please include:
 
 ## License
 
-MIT
+AGPL-3.0

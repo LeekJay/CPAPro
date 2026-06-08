@@ -14,8 +14,10 @@
 }
 
 .settingsCard {
+  gap: 0;
   padding: 0;
   overflow: visible;
+  border-color: var(--border);
 }
 
 .settingsHeader {
@@ -23,7 +25,7 @@
   flex-direction: column;
   gap: $spacing-xs;
   padding: $spacing-md $spacing-lg;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
 
   @include mobile {
     padding-left: $spacing-md;
@@ -36,12 +38,17 @@
   align-items: center;
   gap: $spacing-xs;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .settingsHeaderHint {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
 }
 
 .settingsSection {
@@ -80,12 +87,12 @@
 .settingsLabel {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .settingsDesc {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
 }
 
 .settingsControl {
@@ -109,18 +116,17 @@
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: $radius-full;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-secondary);
-  color: var(--text-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--muted-foreground);
   font-size: 12px;
   cursor: pointer;
   transition: all $transition-fast;
 
   &:hover {
-    border-color: var(--primary-color);
-    color: var(--text-primary);
-    background-color: var(--bg-tertiary);
+    color: var(--foreground);
+    background: var(--muted);
   }
 
   &:disabled {
@@ -130,24 +136,24 @@
 }
 
 .tagActive {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
 
   &:hover {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: #fff;
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-foreground);
   }
 }
 
 .mappingsHeader {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: $spacing-md;
   padding: $spacing-md $spacing-lg;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
 
   @include mobile {
     padding-left: $spacing-md;
@@ -157,7 +163,7 @@
 
 .mappingsTitle {
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .modelsHint {
@@ -166,8 +172,8 @@
   gap: $spacing-xs;
   padding: $spacing-sm $spacing-lg;
   font-size: 13px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border-color);
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
 
   @include mobile {
     padding-left: $spacing-md;
@@ -190,7 +196,7 @@
   align-items: center;
   gap: $spacing-sm;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
 
   &:last-child {
     border-bottom: none;
@@ -203,7 +209,7 @@
 }
 
 .mappingSeparator {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   text-align: center;
 
   @include mobile {
@@ -218,8 +224,24 @@
 .mappingFork {
   display: flex;
   align-items: center;
+  gap: 8px;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
 
   @include mobile {
     justify-content: flex-start;
   }
+}
+
+.emptyCardContent {
+  padding-top: 0;
+}
+
+.emptyState {
+  min-height: 220px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--background);
 }

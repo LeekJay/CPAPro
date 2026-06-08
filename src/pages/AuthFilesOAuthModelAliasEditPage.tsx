@@ -1,12 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { InfoIcon, XIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
-import { IconInfo, IconX } from '@/components/ui/icons';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/shadcn-card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { SecondaryScreenShell } from '@/components/common/SecondaryScreenShell';
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import { useAuthStore, useNotificationStore } from '@/stores';
@@ -340,6 +352,14 @@ export function AuthFilesOAuthModelAliasEditPage() {
   }, [handleBack, mappings, provider, showNotification, t]);
 
   const canSave = !disableControls && !saving && !modelAliasUnsupported;
+  const renderEmpty = (title: string, description?: string) => (
+    <Empty className={styles.emptyState}>
+      <EmptyHeader>
+        <EmptyTitle>{title}</EmptyTitle>
+        {description ? <EmptyDescription>{description}</EmptyDescription> : null}
+      </EmptyHeader>
+    </Empty>
+  );
 
   return (
     <SecondaryScreenShell
@@ -358,24 +378,26 @@ export function AuthFilesOAuthModelAliasEditPage() {
       loadingLabel={t('common.loading')}
     >
       {modelAliasUnsupported ? (
-        <Card>
-          <EmptyState
-            title={t('oauth_model_alias.upgrade_required_title')}
-            description={t('oauth_model_alias.upgrade_required_desc')}
-          />
+        <Card className={styles.settingsCard}>
+          <CardContent className={styles.emptyCardContent}>
+            {renderEmpty(
+              t('oauth_model_alias.upgrade_required_title'),
+              t('oauth_model_alias.upgrade_required_desc')
+            )}
+          </CardContent>
         </Card>
       ) : (
         <>
           <Card className={styles.settingsCard}>
-            <div className={styles.settingsHeader}>
+            <CardHeader className={styles.settingsHeader}>
               <div className={styles.settingsHeaderTitle}>
-                <IconInfo size={16} />
+                <InfoIcon />
                 <span>{t('oauth_model_alias.title')}</span>
               </div>
               <div className={styles.settingsHeaderHint}>{headerHint}</div>
-            </div>
+            </CardHeader>
 
-            <div className={styles.settingsSection}>
+            <CardContent className={styles.settingsSection}>
               <div className={styles.settingsRow}>
                 <div className={styles.settingsInfo}>
                   <div className={styles.settingsLabel}>{t('oauth_model_alias.provider_label')}</div>
@@ -412,12 +434,13 @@ export function AuthFilesOAuthModelAliasEditPage() {
                   })}
                 </div>
               )}
-            </div>
+            </CardContent>
           </Card>
 
           <Card className={styles.settingsCard}>
-            <div className={styles.mappingsHeader}>
-              <div className={styles.mappingsTitle}>{t('oauth_model_alias.alias_label')}</div>
+            <CardHeader className={styles.mappingsHeader}>
+              <CardTitle>{t('oauth_model_alias.alias_label')}</CardTitle>
+              <CardAction>
               <Button
                 variant="secondary"
                 size="sm"
@@ -426,9 +449,10 @@ export function AuthFilesOAuthModelAliasEditPage() {
               >
                 {t('oauth_model_alias.add_alias')}
               </Button>
-            </div>
+              </CardAction>
+            </CardHeader>
 
-            <div className={styles.mappingsBody}>
+            <CardContent className={styles.mappingsBody}>
               {mappings.map((entry, index) => (
                 <div key={entry.id} className={styles.mappingRow}>
                   <AutocompleteInput
@@ -446,35 +470,36 @@ export function AuthFilesOAuthModelAliasEditPage() {
                     }))}
                   />
                   <span className={styles.mappingSeparator}>→</span>
-                  <input
-                    className={`input ${styles.mappingAliasInput}`}
+                  <Input
+                    className={styles.mappingAliasInput}
                     placeholder={t('oauth_model_alias.alias_placeholder')}
                     value={entry.alias}
                     onChange={(e) => updateMappingEntry(index, 'alias', e.target.value)}
                     disabled={disableControls || saving}
                   />
-                  <div className={styles.mappingFork}>
-                    <ToggleSwitch
-                      label={t('oauth_model_alias.alias_fork_label')}
-                      labelPosition="left"
+                  <label className={styles.mappingFork}>
+                    <span>{t('oauth_model_alias.alias_fork_label')}</span>
+                    <Switch
+                      size="sm"
                       checked={Boolean(entry.fork)}
-                      onChange={(value) => updateMappingEntry(index, 'fork', value)}
+                      onCheckedChange={(value) => updateMappingEntry(index, 'fork', value)}
                       disabled={disableControls || saving}
+                      aria-label={t('oauth_model_alias.alias_fork_label')}
                     />
-                  </div>
+                  </label>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon-sm"
                     onClick={() => removeMappingEntry(index)}
                     disabled={disableControls || saving || mappings.length <= 1}
                     title={t('common.delete')}
                     aria-label={t('common.delete')}
                   >
-                    <IconX size={14} />
+                    <XIcon />
                   </Button>
                 </div>
               ))}
-            </div>
+            </CardContent>
           </Card>
         </>
       )}

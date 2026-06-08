@@ -17,6 +17,7 @@ import { detectApiBaseFromLocation, normalizeApiBase } from '@/utils/connection'
 interface AuthStoreState extends AuthState {
   connectionStatus: ConnectionStatus;
   connectionError: string | null;
+  isPreviewSession: boolean;
 
   // 操作
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -56,6 +57,7 @@ export const useAuthStore = create<AuthStoreState>()(
       serverRuntimeKind: 'unknown',
       connectionStatus: 'disconnected',
       connectionError: null,
+      isPreviewSession: false,
 
       // 恢复会话并自动登录
       restoreSession: () => {
@@ -78,7 +80,8 @@ export const useAuthStore = create<AuthStoreState>()(
           set({
             apiBase: resolvedBase,
             managementKey: resolvedKey,
-            rememberPassword: resolvedRememberPassword
+            rememberPassword: resolvedRememberPassword,
+            isPreviewSession: false
           });
           apiClient.setConfig({ apiBase: resolvedBase, managementKey: resolvedKey });
 
@@ -135,6 +138,7 @@ export const useAuthStore = create<AuthStoreState>()(
             rememberPassword,
             connectionStatus: 'connected',
             connectionError: null,
+            isPreviewSession: false,
             ...(runtimeKind !== 'unknown' ? { serverRuntimeKind: runtimeKind } : {})
           });
           if (rememberPassword) {
@@ -170,7 +174,8 @@ export const useAuthStore = create<AuthStoreState>()(
           serverBuildDate: null,
           serverRuntimeKind: 'unknown',
           connectionStatus: 'disconnected',
-          connectionError: null
+          connectionError: null,
+          isPreviewSession: false
         });
         localStorage.removeItem('isLoggedIn');
       },
@@ -194,6 +199,7 @@ export const useAuthStore = create<AuthStoreState>()(
           set({
             isAuthenticated: true,
             connectionStatus: 'connected',
+            isPreviewSession: false,
             ...(runtimeKind !== 'unknown' ? { serverRuntimeKind: runtimeKind } : {})
           });
 
@@ -236,13 +242,21 @@ export const useAuthStore = create<AuthStoreState>()(
           return data ? JSON.stringify(data) : null;
         },
         setItem: (name, value) => {
-          obfuscatedStorage.setItem(name, JSON.parse(value));
+          const parsed = JSON.parse(value);
+          if (parsed?.state?.isPreviewSession) {
+            return;
+          }
+          if (parsed?.state && typeof parsed.state === 'object') {
+            delete parsed.state.isPreviewSession;
+          }
+          obfuscatedStorage.setItem(name, parsed);
         },
         removeItem: (name) => {
           obfuscatedStorage.removeItem(name);
         }
       })),
       partialize: (state) => ({
+        isPreviewSession: state.isPreviewSession,
         apiBase: state.apiBase,
         ...(state.rememberPassword ? { managementKey: state.managementKey } : {}),
         rememberPassword: state.rememberPassword,

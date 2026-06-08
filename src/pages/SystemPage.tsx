@@ -1,47 +1,53 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Modal } from '@/components/ui/Modal';
-import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
-import { IconGithub, IconBookOpen, IconExternalLink, IconCode } from '@/components/ui/icons';
+import {
+  BookOpenIcon,
+  CheckCircle2Icon,
+  CodeIcon,
+  ExternalLinkIcon,
+  InfoIcon,
+  TriangleAlertIcon,
+} from 'lucide-react';
+import { LobeProviderIcon } from '@/components/common/LobeProviderIcon';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/shadcn-card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/shadcn-dialog';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 import {
   useAuthStore,
   useConfigStore,
   useNotificationStore,
   useModelsStore,
-  useThemeStore,
 } from '@/stores';
 import { configApi, versionApi } from '@/services/api';
 import { apiKeysApi } from '@/services/api/apiKeys';
 import { classifyModels } from '@/utils/models';
 import { STORAGE_KEY_AUTH } from '@/utils/constants';
 import { INLINE_LOGO_JPEG } from '@/assets/logoInline';
-import iconGemini from '@/assets/icons/gemini.svg';
-import iconClaude from '@/assets/icons/claude.svg';
-import iconOpenaiLight from '@/assets/icons/openai-light.svg';
-import iconOpenaiDark from '@/assets/icons/openai-dark.svg';
-import iconQwen from '@/assets/icons/qwen.svg';
-import iconKimiLight from '@/assets/icons/kimi-light.svg';
-import iconKimiDark from '@/assets/icons/kimi-dark.svg';
-import iconGlm from '@/assets/icons/glm.svg';
-import iconGrok from '@/assets/icons/grok.svg';
-import iconGrokDark from '@/assets/icons/grok-dark.svg';
-import iconDeepseek from '@/assets/icons/deepseek.svg';
-import iconMinimax from '@/assets/icons/minimax.svg';
 import styles from './SystemPage.module.scss';
-
-const MODEL_CATEGORY_ICONS: Record<string, string | { light: string; dark: string }> = {
-  gpt: { light: iconOpenaiLight, dark: iconOpenaiDark },
-  claude: iconClaude,
-  gemini: iconGemini,
-  qwen: iconQwen,
-  kimi: { light: iconKimiLight, dark: iconKimiDark },
-  glm: iconGlm,
-  grok: { light: iconGrok, dark: iconGrokDark },
-  deepseek: iconDeepseek,
-  minimax: iconMinimax,
-};
 
 const parseVersionSegments = (version?: string | null) => {
   if (!version) return null;
@@ -72,7 +78,6 @@ const compareVersions = (latest?: string | null, current?: string | null) => {
 export function SystemPage() {
   const { t, i18n } = useTranslation();
   const { showNotification, showConfirmation } = useNotificationStore();
-  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const auth = useAuthStore();
   const config = useConfigStore((state) => state.config);
   const fetchConfig = useConfigStore((state) => state.fetchConfig);
@@ -97,6 +102,7 @@ export function SystemPage() {
   const apiKeysCache = useRef<string[]>([]);
   const versionTapCount = useRef(0);
   const versionTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastModelsErrorNotificationRef = useRef('');
 
   const otherLabel = useMemo(
     () => (i18n.language?.toLowerCase().startsWith('zh') ? '其他' : 'Other'),
@@ -112,13 +118,6 @@ export function SystemPage() {
   const buildTime = auth.serverBuildDate
     ? new Date(auth.serverBuildDate).toLocaleString(i18n.language)
     : t('system_info.version_unknown');
-
-  const getIconForCategory = (categoryId: string): string | null => {
-    const iconEntry = MODEL_CATEGORY_ICONS[categoryId];
-    if (!iconEntry) return null;
-    if (typeof iconEntry === 'string') return iconEntry;
-    return resolvedTheme === 'dark' ? iconEntry.dark : iconEntry.light;
-  };
 
   const normalizeApiKeyList = (input: unknown): string[] => {
     if (!Array.isArray(input)) return [];
@@ -204,6 +203,7 @@ export function SystemPage() {
       const suffix = message ? `: ${message}` : '';
       const text = `${t('system_info.models_error')}${suffix}`;
       setModelStatus({ type: 'error', message: text });
+      showNotification(text, 'error');
     }
   };
 
@@ -340,13 +340,48 @@ export function SystemPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.connectionStatus, auth.apiBase]);
 
+  useEffect(() => {
+    if (!modelsError) {
+      lastModelsErrorNotificationRef.current = '';
+      return;
+    }
+
+    if (lastModelsErrorNotificationRef.current === modelsError) return;
+    lastModelsErrorNotificationRef.current = modelsError;
+    showNotification(modelsError, 'error');
+  }, [modelsError, showNotification]);
+
+  const modelStatusTitle =
+    modelStatus?.type === 'success'
+      ? t('common.success')
+      : modelStatus?.type === 'warning'
+        ? t('common.warning')
+        : modelStatus?.type === 'error'
+          ? t('common.error')
+          : t('common.info');
+
+  const renderModelsSkeleton = () => (
+    <div className={styles.modelList}>
+      {Array.from({ length: 4 }, (_, index) => (
+        <div key={index} className={styles.modelSkeletonRow}>
+          <div className={styles.modelSkeletonText}>
+            <Skeleton className={styles.modelSkeletonTitle} />
+            <Skeleton className={styles.modelSkeletonSubtitle} />
+          </div>
+          <Skeleton className={styles.modelSkeletonTags} />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>{t('system_info.title')}</h1>
       <div className={styles.content}>
         <Card className={styles.aboutCard}>
+          <CardContent className={styles.aboutContent}>
           <div className={styles.aboutHeader}>
-            <img src={INLINE_LOGO_JPEG} alt="CPAMC" className={styles.aboutLogo} />
+            <img src={INLINE_LOGO_JPEG} alt="CPAPro" className={styles.aboutLogo} />
             <div className={styles.aboutTitle}>{t('system_info.about_title')}</div>
           </div>
 
@@ -392,10 +427,15 @@ export function SystemPage() {
               <div className={styles.tileSub}>{auth.apiBase || '-'}</div>
             </div>
           </div>
+          </CardContent>
         </Card>
 
-        <Card title={t('system_info.quick_links_title')}>
-          <p className={styles.sectionDescription}>{t('system_info.quick_links_desc')}</p>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('system_info.quick_links_title')}</CardTitle>
+            <CardDescription>{t('system_info.quick_links_desc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
           <div className={styles.quickLinks}>
             <a
               href="https://github.com/router-for-me/CLIProxyAPI"
@@ -404,12 +444,12 @@ export function SystemPage() {
               className={styles.linkCard}
             >
               <div className={`${styles.linkIcon} ${styles.github}`}>
-                <IconGithub size={22} />
+                <CodeIcon />
               </div>
               <div className={styles.linkContent}>
                 <div className={styles.linkTitle}>
                   {t('system_info.link_main_repo')}
-                  <IconExternalLink size={14} />
+                  <ExternalLinkIcon />
                 </div>
                 <div className={styles.linkDesc}>{t('system_info.link_main_repo_desc')}</div>
               </div>
@@ -422,12 +462,12 @@ export function SystemPage() {
               className={styles.linkCard}
             >
               <div className={`${styles.linkIcon} ${styles.github}`}>
-                <IconCode size={22} />
+                <CodeIcon />
               </div>
               <div className={styles.linkContent}>
                 <div className={styles.linkTitle}>
                   {t('system_info.link_webui_repo')}
-                  <IconExternalLink size={14} />
+                  <ExternalLinkIcon />
                 </div>
                 <div className={styles.linkDesc}>{t('system_info.link_webui_repo_desc')}</div>
               </div>
@@ -440,22 +480,27 @@ export function SystemPage() {
               className={styles.linkCard}
             >
               <div className={`${styles.linkIcon} ${styles.docs}`}>
-                <IconBookOpen size={22} />
+                <BookOpenIcon />
               </div>
               <div className={styles.linkContent}>
                 <div className={styles.linkTitle}>
                   {t('system_info.link_docs')}
-                  <IconExternalLink size={14} />
+                  <ExternalLinkIcon />
                 </div>
                 <div className={styles.linkDesc}>{t('system_info.link_docs_desc')}</div>
               </div>
             </a>
           </div>
+          </CardContent>
         </Card>
 
-        <Card
-          title={t('system_info.models_title')}
-          extra={
+        <Card>
+          <CardHeader className={styles.cardHeaderRow}>
+            <div>
+              <CardTitle>{t('system_info.models_title')}</CardTitle>
+              <CardDescription>{t('system_info.models_desc')}</CardDescription>
+            </div>
+            <CardAction>
             <Button
               variant="secondary"
               size="sm"
@@ -464,67 +509,116 @@ export function SystemPage() {
             >
               {t('common.refresh')}
             </Button>
-          }
-        >
-          <p className={styles.sectionDescription}>{t('system_info.models_desc')}</p>
-          {modelStatus && (
-            <div className={`status-badge ${modelStatus.type}`}>{modelStatus.message}</div>
-          )}
-          {modelsError && <div className="error-box">{modelsError}</div>}
-          {modelsLoading ? (
-            <div className="hint">{t('common.loading')}</div>
-          ) : models.length === 0 ? (
-            <div className="hint">{t('system_info.models_empty')}</div>
-          ) : (
-            <div className="item-list">
-              {groupedModels.map((group) => {
-                const iconSrc = getIconForCategory(group.id);
-                return (
-                  <div key={group.id} className="item-row">
-                    <div className="item-meta">
-                      <div className={styles.groupTitle}>
-                        {iconSrc && <img src={iconSrc} alt="" className={styles.groupIcon} />}
-                        <span className="item-title">{group.label}</span>
-                      </div>
-                      <div className="item-subtitle">
-                        {t('system_info.models_count', { count: group.items.length })}
-                      </div>
-                    </div>
-                    <div className={styles.modelTags}>
-                      {group.items.map((model) => (
-                        <span
-                          key={`${model.name}-${model.alias ?? 'default'}`}
-                          className={styles.modelTag}
-                          title={model.description || ''}
-                        >
-                          <span className={styles.modelName}>{model.name}</span>
-                          {model.alias && <span className={styles.modelAlias}>{model.alias}</span>}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+            </CardAction>
+          </CardHeader>
+          <CardContent className={styles.modelsContent}>
+          {modelStatus && modelStatus.type !== 'error' && (
+            <div className={styles.statusLine}>
+              <Badge variant={modelStatus.type === 'warning' ? 'secondary' : 'outline'}>
+                {modelStatus.type === 'success' ? (
+                  <CheckCircle2Icon data-icon="inline-start" />
+                ) : modelStatus.type === 'warning' ? (
+                  <TriangleAlertIcon data-icon="inline-start" />
+                ) : (
+                  <InfoIcon data-icon="inline-start" />
+                )}
+                {modelStatusTitle}
+              </Badge>
+              <span>{modelStatus.message}</span>
             </div>
           )}
+          {modelsLoading ? (
+            renderModelsSkeleton()
+          ) : models.length === 0 ? (
+            <Empty className={styles.emptyState}>
+              <EmptyHeader>
+                <EmptyTitle>{t('system_info.models_empty')}</EmptyTitle>
+                <EmptyDescription>{t('system_info.models_desc')}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <div className={styles.modelsList}>
+              {groupedModels.map((group) => (
+                <div key={group.id} className={styles.modelGroupRow}>
+                  <div className={styles.modelGroupMeta}>
+                    <div className={styles.groupTitle}>
+                      <LobeProviderIcon
+                        provider={group.id}
+                        size={18}
+                        className={styles.groupIcon}
+                        fallbackLabel={group.label}
+                      />
+                      <span className={styles.modelGroupTitle}>{group.label}</span>
+                    </div>
+                    <div className={styles.modelGroupSubtitle}>
+                      {t('system_info.models_count', { count: group.items.length })}
+                    </div>
+                  </div>
+                  <div className={styles.modelTags}>
+                    {group.items.map((model) => (
+                      <span
+                        key={`${model.name}-${model.alias ?? 'default'}`}
+                        className={styles.modelTag}
+                        title={model.description || ''}
+                      >
+                        <span className={styles.modelName}>{model.name}</span>
+                        {model.alias && <span className={styles.modelAlias}>{model.alias}</span>}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          </CardContent>
         </Card>
 
-        <Card title={t('system_info.clear_login_title')}>
-          <p className={styles.sectionDescription}>{t('system_info.clear_login_desc')}</p>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('system_info.clear_login_title')}</CardTitle>
+            <CardDescription>{t('system_info.clear_login_desc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
           <div className={styles.clearLoginActions}>
             <Button variant="danger" onClick={handleClearLoginStorage}>
               {t('system_info.clear_login_button')}
             </Button>
           </div>
+          </CardContent>
         </Card>
       </div>
 
-      <Modal
+      <Dialog
         open={requestLogModalOpen}
-        onClose={handleRequestLogClose}
-        title={t('basic_settings.request_log_title')}
-        footer={
-          <>
+        onOpenChange={(open) => {
+          if (!open) handleRequestLogClose();
+        }}
+      >
+        <DialogContent className={styles.requestLogDialog}>
+          <DialogHeader>
+            <DialogTitle>{t('basic_settings.request_log_title')}</DialogTitle>
+            <DialogDescription>{t('basic_settings.request_log_warning')}</DialogDescription>
+          </DialogHeader>
+        <div className={styles.requestLogModal}>
+          <Alert>
+            <TriangleAlertIcon />
+            <AlertTitle>{t('common.warning')}</AlertTitle>
+            <AlertDescription>{t('basic_settings.request_log_warning')}</AlertDescription>
+          </Alert>
+          <label className={styles.requestLogSwitchRow}>
+            <span>{t('basic_settings.request_log_enable')}</span>
+            <Switch
+              checked={requestLogDraft}
+              disabled={!canEditRequestLog || requestLogSaving}
+              onCheckedChange={(value) => {
+                setRequestLogDraft(value);
+                setRequestLogTouched(true);
+              }}
+              aria-label={t('basic_settings.request_log_enable')}
+            />
+          </label>
+        </div>
+          <DialogFooter>
             <Button variant="secondary" onClick={handleRequestLogClose} disabled={requestLogSaving}>
               {t('common.cancel')}
             </Button>
@@ -535,23 +629,9 @@ export function SystemPage() {
             >
               {t('common.save')}
             </Button>
-          </>
-        }
-      >
-        <div className="request-log-modal">
-          <div className="status-badge warning">{t('basic_settings.request_log_warning')}</div>
-          <ToggleSwitch
-            label={t('basic_settings.request_log_enable')}
-            labelPosition="left"
-            checked={requestLogDraft}
-            disabled={!canEditRequestLog || requestLogSaving}
-            onChange={(value) => {
-              setRequestLogDraft(value);
-              setRequestLogTouched(true);
-            }}
-          />
-        </div>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,6 +1,14 @@
 @use '../../../styles/mixins' as *;
 @use '../../../styles/variables' as *;
 
+.resourceTable {
+  min-width: 920px;
+}
+
+.alignRight {
+  text-align: right;
+}
+
 .primaryCell {
   display: flex;
   flex-direction: column;
@@ -93,15 +101,7 @@
 }
 
 .statusBadge {
-  display: inline-flex;
-  align-items: center;
   gap: 4px;
-  padding: 3px 9px;
-  border-radius: var(--radius-md);
-  border: 1px solid;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
 }
 
 .statusCell {
@@ -144,18 +144,6 @@
   border-color: var(--failure-badge-border);
 }
 
-.statusActive {
-  border-color: var(--success-badge-border);
-  background: var(--success-badge-bg);
-  color: var(--success-badge-text);
-}
-
-.statusDisabled {
-  border-color: var(--amber-30);
-  background: var(--amber-10);
-  color: var(--amber-text);
-}
-
 .actions {
   display: flex;
   gap: 4px;
@@ -167,43 +155,4 @@
   display: inline-flex;
   align-items: center;
   margin-right: 4px;
-}
-
-.iconBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background-color $transition-fast, color $transition-fast;
-
-  &:hover:not(:disabled) {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: -1px;
-  }
-}
-
-.iconBtnDanger {
-  color: var(--destructive-color);
-
-  &:hover:not(:disabled) {
-    background: var(--destructive-10);
-    color: var(--destructive-color);
-  }
 }

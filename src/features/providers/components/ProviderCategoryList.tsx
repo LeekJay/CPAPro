@@ -1,22 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import ampcodeLogo from '@/assets/icons/amp.svg';
-import claudeLogo from '@/assets/icons/claude.svg';
-import codexLogo from '@/assets/icons/codex.svg';
-import geminiLogo from '@/assets/icons/gemini.svg';
-import openaiLogo from '@/assets/icons/openai-light.svg';
-import vertexLogo from '@/assets/icons/vertex.svg';
-import { IconAlertTriangle } from '@/components/ui/icons';
+import { AlertTriangleIcon } from 'lucide-react';
+import { LobeProviderIcon } from '@/components/common/LobeProviderIcon';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { ProviderBrand, ProviderGroup } from '../types';
 import styles from './ProviderCategoryList.module.scss';
-
-const PROVIDER_LOGOS: Record<ProviderBrand, { src: string; invertOnDark?: boolean }> = {
-  gemini: { src: geminiLogo },
-  claude: { src: claudeLogo },
-  codex: { src: codexLogo },
-  vertex: { src: vertexLogo },
-  openaiCompatibility: { src: openaiLogo, invertOnDark: true },
-  ampcode: { src: ampcodeLogo },
-};
 
 interface ProviderCategoryListProps {
   groups: ProviderGroup[];
@@ -42,26 +30,24 @@ export function ProviderCategoryList({
           );
           const total = realResources.length || (group.id === 'ampcode' ? 1 : 0);
           const activeCount = realResources.filter((r) => !r.disabled).length;
-          const logo = PROVIDER_LOGOS[group.id];
           const itemClass = `${styles.item} ${active ? styles.active : ''}`;
 
           return (
-            <button
+            <Button
               key={group.id}
               type="button"
+              variant="ghost"
               className={itemClass}
               onClick={() => onSelect(group.id)}
               aria-current={active ? 'page' : undefined}
             >
               <span className={styles.itemLeft}>
-                {logo ? (
-                  <img
-                    src={logo.src}
-                    alt=""
-                    aria-hidden="true"
-                    className={`${styles.logo} ${logo.invertOnDark ? styles.logoInvertOnDark : ''}`}
-                  />
-                ) : null}
+                <LobeProviderIcon
+                  provider={group.id}
+                  size={26}
+                  className={styles.logo}
+                  fallbackLabel={t(`providersPage.providerNames.${group.id}`)}
+                />
                 <span className={styles.itemText}>
                   <span className={styles.itemTitle}>
                     {t(`providersPage.providerNames.${group.id}`)}
@@ -81,20 +67,16 @@ export function ProviderCategoryList({
                 </span>
               </span>
               {group.issue ? (
-                <IconAlertTriangle
-                  size={16}
-                  style={{ color: 'var(--amber-text)', flexShrink: 0 }}
-                />
+                <AlertTriangleIcon className={styles.issueIcon} />
               ) : (
-                <span
-                  className={`${styles.badge} ${
-                    group.id !== 'ampcode' && total === 0 ? styles.badgeAmber : ''
-                  }`}
+                <Badge
+                  variant={group.id !== 'ampcode' && total === 0 ? 'secondary' : 'outline'}
+                  className={styles.badge}
                 >
                   {group.id === 'ampcode' ? (group.resources[0]?.disabled ? '—' : '1') : total}
-                </span>
+                </Badge>
               )}
-            </button>
+            </Button>
           );
         })}
       </div>

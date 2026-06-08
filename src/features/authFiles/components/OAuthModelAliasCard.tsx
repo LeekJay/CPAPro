@@ -1,10 +1,22 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { ChevronUpIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/shadcn-card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { ModelMappingDiagram, type ModelMappingDiagramRef } from '@/components/modelAlias';
-import { IconChevronUp } from '@/components/ui/icons';
 import type { OAuthModelAliasEntry } from '@/types';
 import type { AuthFileModelItem } from '@/features/authFiles/constants';
 import styles from '@/pages/AuthFilesPage.module.scss';
@@ -49,29 +61,47 @@ export function OAuthModelAliasCard(props: OAuthModelAliasCardProps) {
     onDeleteAlias
   } = props;
 
+  const renderEmpty = (title: string, description?: string) => (
+    <Empty className={styles.emptyState}>
+      <EmptyHeader>
+        <EmptyTitle>{title}</EmptyTitle>
+        {description ? <EmptyDescription>{description}</EmptyDescription> : null}
+      </EmptyHeader>
+    </Empty>
+  );
+
   return (
-    <Card
-      title={t('oauth_model_alias.title')}
-      extra={
+    <Card className={styles.filesPanel}>
+      <CardHeader className={styles.filesPanelHeader}>
+        <CardTitle>{t('oauth_model_alias.title')}</CardTitle>
+        <CardAction className={styles.filesPanelActions}>
         <div className={styles.cardExtraButtons}>
-          <div className={styles.viewModeSwitch}>
-            <Button
-              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(value) => {
+              if (value === 'list' || value === 'diagram') onViewModeChange(value);
+            }}
+            variant="outline"
+            size="sm"
+            spacing={0}
+            className={styles.viewModeSwitch}
+          >
+            <ToggleGroupItem
+              value="list"
               size="sm"
-              onClick={() => onViewModeChange('list')}
               disabled={disableControls || modelAliasError === 'unsupported'}
             >
               {t('oauth_model_alias.view_mode_list')}
-            </Button>
-            <Button
-              variant={viewMode === 'diagram' ? 'secondary' : 'ghost'}
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="diagram"
               size="sm"
-              onClick={() => onViewModeChange('diagram')}
               disabled={disableControls || modelAliasError === 'unsupported'}
             >
               {t('oauth_model_alias.view_mode_diagram')}
-            </Button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
           <Button
             size="sm"
             onClick={onAdd}
@@ -80,16 +110,17 @@ export function OAuthModelAliasCard(props: OAuthModelAliasCardProps) {
             {t('oauth_model_alias.add')}
           </Button>
         </div>
-      }
-    >
+        </CardAction>
+      </CardHeader>
+      <CardContent className={styles.filesPanelContent}>
       {modelAliasError === 'unsupported' ? (
-        <EmptyState
-          title={t('oauth_model_alias.upgrade_required_title')}
-          description={t('oauth_model_alias.upgrade_required_desc')}
-        />
+        renderEmpty(
+          t('oauth_model_alias.upgrade_required_title'),
+          t('oauth_model_alias.upgrade_required_desc')
+        )
       ) : viewMode === 'diagram' ? (
         Object.keys(modelAlias).length === 0 ? (
-          <EmptyState title={t('oauth_model_alias.list_empty_all')} />
+          renderEmpty(t('oauth_model_alias.list_empty_all'))
         ) : (
           <div className={styles.aliasChartSection}>
             <div className={styles.aliasChartHeader}>
@@ -102,7 +133,7 @@ export function OAuthModelAliasCard(props: OAuthModelAliasCardProps) {
                 title={t('oauth_model_alias.diagram_collapse')}
                 aria-label={t('oauth_model_alias.diagram_collapse')}
               >
-                <IconChevronUp size={16} />
+                <ChevronUpIcon />
               </Button>
             </div>
             <ModelMappingDiagram
@@ -121,7 +152,7 @@ export function OAuthModelAliasCard(props: OAuthModelAliasCardProps) {
           </div>
         )
       ) : Object.keys(modelAlias).length === 0 ? (
-        <EmptyState title={t('oauth_model_alias.list_empty_all')} />
+        renderEmpty(t('oauth_model_alias.list_empty_all'))
       ) : (
         <div className={styles.excludedList}>
           {Object.entries(modelAlias).map(([provider, mappings]) => (
@@ -146,6 +177,7 @@ export function OAuthModelAliasCard(props: OAuthModelAliasCardProps) {
           ))}
         </div>
       )}
+      </CardContent>
     </Card>
   );
 }

@@ -1,13 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import ampcodeLogo from '@/assets/icons/amp.svg';
-import claudeLogo from '@/assets/icons/claude.svg';
-import codexLogo from '@/assets/icons/codex.svg';
-import geminiLogo from '@/assets/icons/gemini.svg';
-import openaiLogo from '@/assets/icons/openai-light.svg';
-import vertexLogo from '@/assets/icons/vertex.svg';
-import { IconPlus, IconSearch } from '@/components/ui/icons';
+import { PlusIcon, SearchIcon } from 'lucide-react';
+import { LobeProviderIcon } from '@/components/common/LobeProviderIcon';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import type { ProviderRecentUsageMap } from '@/components/providers/utils';
-import type { ProviderBrand, ProviderGroup, ProviderResource } from '../types';
+import type { ProviderGroup, ProviderResource } from '../types';
 import { ProviderResourceTable } from './ProviderResourceTable';
 import {
   OpenAIBrandToolbar,
@@ -15,15 +12,6 @@ import {
   type SortDir,
 } from './OpenAIBrandToolbar';
 import styles from './ProviderResourcePanel.module.scss';
-
-const LOGOS: Record<ProviderBrand, { src: string; invertOnDark?: boolean }> = {
-  gemini: { src: geminiLogo },
-  claude: { src: claudeLogo },
-  codex: { src: codexLogo },
-  vertex: { src: vertexLogo },
-  openaiCompatibility: { src: openaiLogo, invertOnDark: true },
-  ampcode: { src: ampcodeLogo },
-};
 
 export interface OpenAIPanelControls {
   sortBy: OpenAISortBy;
@@ -67,7 +55,6 @@ export function ProviderResourcePanel({
   onCreate,
 }: ProviderResourcePanelProps) {
   const { t } = useTranslation();
-  const logo = LOGOS[group.id];
 
   const realResources = filteredResources.filter((r) => !r.flags.isPlaceholder);
 
@@ -77,14 +64,12 @@ export function ProviderResourcePanel({
         <div className={styles.headerMain}>
           <div className={styles.titleArea}>
             <div className={styles.titleRow}>
-              {logo ? (
-                <img
-                  src={logo.src}
-                  alt=""
-                  aria-hidden="true"
-                  className={`${styles.logo} ${logo.invertOnDark ? styles.logoInvertOnDark : ''}`}
-                />
-              ) : null}
+              <LobeProviderIcon
+                provider={group.id}
+                size={26}
+                className={styles.logo}
+                fallbackLabel={t(`providersPage.providerNames.${group.id}`)}
+              />
               <h2 className={styles.title}>
                 {t(`providersPage.providerNames.${group.id}`)}
               </h2>
@@ -92,15 +77,13 @@ export function ProviderResourcePanel({
           </div>
           {group.id !== 'ampcode' ? (
             <div className={styles.searchWrap}>
-              <span className={styles.searchIcon} aria-hidden="true">
-                <IconSearch size={16} />
-              </span>
-              <input
+              <Input
                 type="search"
                 className={styles.searchInput}
                 value={filter}
                 onChange={(event) => onFilterChange(event.target.value)}
                 placeholder={t('providersPage.table.filterPlaceholder')}
+                rightElement={<SearchIcon data-icon="inline-end" />}
               />
             </div>
           ) : null}
@@ -134,24 +117,15 @@ export function ProviderResourcePanel({
         <div className={styles.empty}>
           <div>{t('providersPage.table.empty')}</div>
           <div className={styles.emptyAction}>
-            <button
+            <Button
               type="button"
               onClick={onCreate}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '7px 13px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)',
-                background: 'var(--bg-primary)',
-                cursor: 'pointer',
-                fontSize: 14,
-              }}
+              variant="secondary"
+              size="sm"
             >
-              <IconPlus size={16} />
+              <PlusIcon data-icon="inline-start" />
               <span>{t('providersPage.actions.new')}</span>
-            </button>
+            </Button>
           </div>
         </div>
       ) : (

@@ -1,17 +1,31 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  IconAlertTriangle,
-  IconCheckCircle2,
-  IconDownload,
-  IconEye,
-  IconEyeOff,
-  IconLoader2,
-  IconPlus,
-  IconX,
-} from '@/components/ui/icons';
-import { Collapsible } from '@/components/ui/Collapsible';
-import { Select } from '@/components/ui/Select';
+  AlertCircleIcon,
+  AlertTriangleIcon,
+  CheckCircle2Icon,
+  DownloadIcon,
+  EyeIcon,
+  EyeOffIcon,
+  Loader2Icon,
+  PlusIcon,
+  XIcon,
+} from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
+import {
+  Input,
+} from '@/components/ui/input';
+import { Collapsible } from '@/components/ui/collapsible';
+import { OptionSelect } from '@/components/ui/shadcn-option-select';
+import { Textarea } from '@/components/ui/textarea';
 import { hasDisableAllModelsRule } from '@/components/providers/utils';
 import type { GeminiKeyConfig, OpenAIProviderConfig, ProviderKeyConfig } from '@/types';
 import type { ModelInfo } from '@/utils/models';
@@ -160,21 +174,21 @@ function ConnectivityStatusIcon({ state }: { state: ConnectivityState }) {
   if (state === 'loading') {
     return (
       <span className={`${styles.statusIcon} ${styles.statusIconLoading}`}>
-        <IconLoader2 size={14} />
+        <Loader2Icon data-icon="inline-start" />
       </span>
     );
   }
   if (state === 'success') {
     return (
       <span className={`${styles.statusIcon} ${styles.statusIconSuccess}`}>
-        <IconCheckCircle2 size={14} />
+        <CheckCircle2Icon data-icon="inline-start" />
       </span>
     );
   }
   if (state === 'error') {
     return (
       <span className={`${styles.statusIcon} ${styles.statusIconError}`}>
-        <IconAlertTriangle size={14} />
+        <AlertTriangleIcon data-icon="inline-start" />
       </span>
     );
   }
@@ -444,70 +458,73 @@ export function BaseProviderForm({
   return (
     <form id={formId} className={styles.form} onSubmit={handleSubmit} noValidate>
       {/* 基础字段 */}
-      <div className={styles.section}>
+      <FieldGroup className={styles.section}>
         {descriptor.supportsName ? (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor={`${fid}-name`}>
+          <Field>
+            <FieldLabel htmlFor={`${fid}-name`}>
               {t('providersPage.form.name')}
-            </label>
-            <input
+            </FieldLabel>
+            <Input
               id={`${fid}-name`}
-              className={styles.input}
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
               disabled={mutating}
             />
-          </div>
+          </Field>
         ) : null}
 
         {descriptor.supportsApiKey ? (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor={`${fid}-apiKey`}>
+          <Field>
+            <FieldLabel htmlFor={`${fid}-apiKey`}>
               {t('providersPage.form.apiKey')}
-            </label>
-            <div className={styles.passwordField}>
-              <input
-                id={`${fid}-apiKey`}
-                className={styles.passwordInput}
-                type={showSingleApiKey ? 'text' : 'password'}
-                value={form.apiKey}
-                onChange={(e) => updateField('apiKey', e.target.value)}
-                autoComplete="new-password"
-                data-1p-ignore="true"
-                data-lpignore="true"
-                data-bwignore="true"
-                placeholder={
-                  mode === 'edit'
-                    ? t('providersPage.form.apiKeyEditPlaceholder')
-                    : t('providersPage.form.apiKeyCreatePlaceholder')
-                }
-                disabled={mutating}
-              />
-              <button
-                type="button"
-                className={styles.passwordToggle}
-                onClick={() => setShowSingleApiKey((v) => !v)}
-                disabled={mutating}
-                aria-label={
-                  showSingleApiKey
-                    ? t('providersPage.form.hideApiKey')
-                    : t('providersPage.form.showApiKey')
-                }
-                title={
-                  showSingleApiKey
-                    ? t('providersPage.form.hideApiKey')
-                    : t('providersPage.form.showApiKey')
-                }
-              >
-                {showSingleApiKey ? <IconEyeOff size={16} /> : <IconEye size={16} />}
-              </button>
-            </div>
-          </div>
+            </FieldLabel>
+            <Input
+              id={`${fid}-apiKey`}
+              type={showSingleApiKey ? 'text' : 'password'}
+              value={form.apiKey}
+              onChange={(e) => updateField('apiKey', e.target.value)}
+              autoComplete="new-password"
+              data-1p-ignore="true"
+              data-lpignore="true"
+              data-bwignore="true"
+              placeholder={
+                mode === 'edit'
+                  ? t('providersPage.form.apiKeyEditPlaceholder')
+                  : t('providersPage.form.apiKeyCreatePlaceholder')
+              }
+              disabled={mutating}
+              rightElement={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setShowSingleApiKey((v) => !v)}
+                  disabled={mutating}
+                  aria-label={
+                    showSingleApiKey
+                      ? t('providersPage.form.hideApiKey')
+                      : t('providersPage.form.showApiKey')
+                  }
+                  title={
+                    showSingleApiKey
+                      ? t('providersPage.form.hideApiKey')
+                      : t('providersPage.form.showApiKey')
+                  }
+                >
+                  {showSingleApiKey ? (
+                    <EyeOffIcon data-icon="inline-start" />
+                  ) : (
+                    <EyeIcon data-icon="inline-start" />
+                  )}
+                </Button>
+              }
+            />
+          </Field>
         ) : null}
 
         {descriptor.supportsBaseUrl ? (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor={`${fid}-baseUrl`}>
+          <Field>
+            <FieldLabel htmlFor={`${fid}-baseUrl`}>
               {t('providersPage.form.baseUrl')}
               {descriptor.baseUrlRequired ? (
                 <span className={styles.labelHint}>
@@ -515,57 +532,53 @@ export function BaseProviderForm({
                   · {t('providersPage.form.baseUrlRequiredHint')}
                 </span>
               ) : null}
-            </label>
-            <input
+            </FieldLabel>
+            <Input
               id={`${fid}-baseUrl`}
-              className={styles.input}
               value={form.baseUrl}
               onChange={(e) => updateField('baseUrl', e.target.value)}
               placeholder="https://api.example.com"
               disabled={mutating}
             />
-          </div>
+          </Field>
         ) : null}
 
         {descriptor.supportsProxyUrl ? (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor={`${fid}-proxy`}>
+          <Field>
+            <FieldLabel htmlFor={`${fid}-proxy`}>
               {t('providersPage.form.proxyUrl')}
-            </label>
-            <input
+            </FieldLabel>
+            <Input
               id={`${fid}-proxy`}
-              className={styles.input}
               value={form.proxyUrl}
               onChange={(e) => updateField('proxyUrl', e.target.value)}
               placeholder="http://127.0.0.1:7890"
               disabled={mutating}
             />
-          </div>
+          </Field>
         ) : null}
 
         {descriptor.supportsPrefix ? (
           <div className={styles.fieldRow}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor={`${fid}-prefix`}>
+            <Field>
+              <FieldLabel htmlFor={`${fid}-prefix`}>
                 {t('providersPage.form.prefix')}
-              </label>
-              <input
+              </FieldLabel>
+              <Input
                 id={`${fid}-prefix`}
-                className={styles.input}
                 value={form.prefix}
                 onChange={(e) => updateField('prefix', e.target.value)}
                 disabled={mutating}
               />
-            </div>
+            </Field>
             {descriptor.supportsPriority ? (
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor={`${fid}-prio`}>
+              <Field>
+                <FieldLabel htmlFor={`${fid}-prio`}>
                   {t('providersPage.form.priority')}
-                </label>
-                <input
+                </FieldLabel>
+                <Input
                   id={`${fid}-prio`}
                   type="number"
-                  className={styles.input}
                   value={form.priority ?? ''}
                   onChange={(e) =>
                     updateField(
@@ -575,14 +588,14 @@ export function BaseProviderForm({
                   }
                   disabled={mutating}
                 />
-              </div>
+              </Field>
             ) : null}
           </div>
         ) : null}
 
         {descriptor.supportsTestModel ? (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor={`${fid}-testModel`}>
+          <Field>
+            <FieldLabel htmlFor={`${fid}-testModel`}>
               {t('providersPage.form.testModel')}
               {brand === 'claude' ? (
                 <span className={styles.labelHint}>
@@ -590,8 +603,8 @@ export function BaseProviderForm({
                   · {t('providersPage.form.testModelClaudeHint')}
                 </span>
               ) : null}
-            </label>
-            <Select
+            </FieldLabel>
+            <OptionSelect
               id={`${fid}-testModel`}
               value={form.testModel ?? ''}
               options={testModelOptions}
@@ -601,19 +614,16 @@ export function BaseProviderForm({
             />
             {brand === 'claude' ? (
               <div className={styles.connectivityRow}>
-                <button
+                <Button
                   type="button"
-                  className={styles.connectivityBtn}
+                  variant="secondary"
+                  size="sm"
                   disabled={mutating || connectivity.isTestingAny}
+                  loading={connectivity.claudeStatus.state === 'loading'}
                   onClick={() => void connectivity.runClaude()}
                 >
-                  {connectivity.claudeStatus.state === 'loading' ? (
-                    <span className={`${styles.statusIcon} ${styles.statusIconLoading}`}>
-                      <IconLoader2 size={14} />
-                    </span>
-                  ) : null}
                   <span>{t('providersPage.connectivity.test')}</span>
-                </button>
+                </Button>
                 <ConnectivityStatusIcon state={connectivity.claudeStatus.state} />
                 {connectivity.claudeStatus.state === 'success' ? (
                   <span className={styles.connectivityHintSuccess}>
@@ -625,17 +635,16 @@ export function BaseProviderForm({
             {brand === 'claude' && connectivity.claudeStatus.state === 'error' ? (
               <div className={styles.connectivityError}>{connectivity.claudeStatus.message}</div>
             ) : null}
-          </div>
+          </Field>
         ) : null}
 
         {descriptor.supportsWebsockets ? (
           <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              className={styles.checkboxBox}
+            <Checkbox
               checked={form.websockets ?? false}
               disabled={mutating}
-              onChange={(e) => updateField('websockets', e.target.checked)}
+              onCheckedChange={(value) => updateField('websockets', value === true)}
+              aria-label={t('providersPage.form.websockets')}
             />
             <span className={styles.checkboxText}>
               <span>{t('providersPage.form.websockets')}</span>
@@ -645,12 +654,11 @@ export function BaseProviderForm({
 
         {descriptor.supportsDisabled ? (
           <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              className={styles.checkboxBox}
+            <Checkbox
               checked={form.disabled}
               disabled={mutating}
-              onChange={(e) => updateField('disabled', e.target.checked)}
+              onCheckedChange={(value) => updateField('disabled', value === true)}
+              aria-label={t('providersPage.form.disabled')}
             />
             <span className={styles.checkboxText}>
               <span>{t('providersPage.form.disabled')}</span>
@@ -658,7 +666,7 @@ export function BaseProviderForm({
             </span>
           </label>
         ) : null}
-      </div>
+      </FieldGroup>
 
       {/* 高级折叠区 */}
       {descriptor.supportsApiKeyEntries && form.apiKeyEntries ? (
@@ -672,29 +680,27 @@ export function BaseProviderForm({
           <div className={styles.entriesList}>
             <div className={`${styles.entriesToolbar} ${styles.entriesToolbarSplit}`}>
               {/* Add entry button on the left */}
-              <button
+              <Button
                 type="button"
-                className={styles.addBtn}
+                variant="secondary"
+                size="sm"
                 disabled={mutating}
                 onClick={() => updateField('apiKeyEntries', [...apiKeyEntries, emptyApiKeyEntry()])}
               >
-                <IconPlus size={12} />
+                <PlusIcon data-icon="inline-start" />
                 <span>{t('providersPage.form.addApiKeyEntry')}</span>
-              </button>
+              </Button>
               {/* Test all button on the right */}
-              <button
+              <Button
                 type="button"
-                className={styles.connectivityBtn}
+                variant="secondary"
+                size="sm"
                 disabled={mutating || connectivity.isTestingAny}
+                loading={connectivity.isTestingAny}
                 onClick={() => void connectivity.runOpenAIAllKeys()}
               >
-                {connectivity.isTestingAny ? (
-                  <span className={`${styles.statusIcon} ${styles.statusIconLoading}`}>
-                    <IconLoader2 size={14} />
-                  </span>
-                ) : null}
                 <span>{t('providersPage.connectivity.testAll')}</span>
-              </button>
+              </Button>
             </div>
             {[...apiKeyEntries].reverse().map((entry, visualIdx) => {
               const realIdx = apiKeyEntries.length - 1 - visualIdx;
@@ -708,83 +714,81 @@ export function BaseProviderForm({
                     <span>{t('providersPage.form.apiKeyEntry', { index: realIdx + 1 })}</span>
                     <div className={styles.entryCardHeaderRight}>
                       <ConnectivityStatusIcon state={status.state} />
-                      <button
+                      <Button
                         type="button"
-                        className={styles.connectivityBtnGhost}
+                        variant="ghost"
+                        size="sm"
                         disabled={mutating || status.state === 'loading'}
+                        loading={status.state === 'loading'}
                         onClick={() => void connectivity.runOpenAIKey(realIdx)}
                       >
-                        {status.state === 'loading' ? (
-                          <span className={`${styles.statusIcon} ${styles.statusIconLoading}`}>
-                            <IconLoader2 size={14} />
-                          </span>
-                        ) : null}
                         <span>{t('providersPage.connectivity.test')}</span>
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className={styles.removeBtn}
+                        variant="destructive"
+                        size="icon-sm"
                         disabled={mutating || apiKeyEntries.length <= 1}
                         onClick={() => removeApiKeyEntry(realIdx)}
+                        aria-label={t('common.delete')}
                       >
-                        <IconX size={12} />
-                      </button>
+                        <XIcon data-icon="inline-start" />
+                      </Button>
                     </div>
                   </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>{t('providersPage.form.apiKey')}</label>
-                    <div className={styles.passwordField}>
-                      <input
-                        className={styles.passwordInput}
-                        type={showPasswords.has(realIdx) ? 'text' : 'password'}
-                        value={entry.apiKey}
-                        onChange={(e) =>
-                          updateField(
-                            'apiKeyEntries',
-                            apiKeyEntries.map((it, i) =>
-                              i === realIdx ? { ...it, apiKey: e.target.value } : it
-                            )
+                  <Field>
+                    <FieldLabel>{t('providersPage.form.apiKey')}</FieldLabel>
+                    <Input
+                      type={showPasswords.has(realIdx) ? 'text' : 'password'}
+                      value={entry.apiKey}
+                      onChange={(e) =>
+                        updateField(
+                          'apiKeyEntries',
+                          apiKeyEntries.map((it, i) =>
+                            i === realIdx ? { ...it, apiKey: e.target.value } : it
                           )
-                        }
-                        autoComplete="new-password"
-                        data-1p-ignore="true"
-                        data-lpignore="true"
-                        data-bwignore="true"
-                        disabled={mutating}
-                        placeholder={
-                          entry.existingApiKey
-                            ? t('providersPage.form.apiKeyEditPlaceholder')
-                            : t('providersPage.form.apiKeyCreatePlaceholder')
-                        }
-                      />
-                      <button
-                        type="button"
-                        className={styles.passwordToggle}
-                        onClick={() => togglePasswordVisibility(realIdx)}
-                        disabled={mutating}
-                        aria-label={
-                          showPasswords.has(realIdx)
-                            ? t('providersPage.form.hideApiKey')
-                            : t('providersPage.form.showApiKey')
-                        }
-                        title={
-                          showPasswords.has(realIdx)
-                            ? t('providersPage.form.hideApiKey')
-                            : t('providersPage.form.showApiKey')
-                        }
-                      >
-                        {showPasswords.has(realIdx) ? (
-                          <IconEyeOff size={16} />
-                        ) : (
-                          <IconEye size={16} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>{t('providersPage.form.proxyUrl')}</label>
-                    <input
-                      className={styles.input}
+                        )
+                      }
+                      autoComplete="new-password"
+                      data-1p-ignore="true"
+                      data-lpignore="true"
+                      data-bwignore="true"
+                      disabled={mutating}
+                      placeholder={
+                        entry.existingApiKey
+                          ? t('providersPage.form.apiKeyEditPlaceholder')
+                          : t('providersPage.form.apiKeyCreatePlaceholder')
+                      }
+                      rightElement={
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => togglePasswordVisibility(realIdx)}
+                          disabled={mutating}
+                          aria-label={
+                            showPasswords.has(realIdx)
+                              ? t('providersPage.form.hideApiKey')
+                              : t('providersPage.form.showApiKey')
+                          }
+                          title={
+                            showPasswords.has(realIdx)
+                              ? t('providersPage.form.hideApiKey')
+                              : t('providersPage.form.showApiKey')
+                          }
+                        >
+                          {showPasswords.has(realIdx) ? (
+                            <EyeOffIcon data-icon="inline-start" />
+                          ) : (
+                            <EyeIcon data-icon="inline-start" />
+                          )}
+                        </Button>
+                      }
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel>{t('providersPage.form.proxyUrl')}</FieldLabel>
+                    <Input
                       value={entry.proxyUrl}
                       onChange={(e) =>
                         updateField(
@@ -797,7 +801,7 @@ export function BaseProviderForm({
                       disabled={mutating}
                       placeholder="http://127.0.0.1:7890"
                     />
-                  </div>
+                  </Field>
                   {status.state === 'error' ? (
                     <div className={styles.connectivityError}>{status.message}</div>
                   ) : null}
@@ -812,12 +816,8 @@ export function BaseProviderForm({
         <Collapsible label={t('providersPage.form.headersSection')}>
           <div className={styles.entriesList}>
             {headersList.map((entry, idx) => (
-              <div
-                key={idx}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8 }}
-              >
-                <input
-                  className={styles.input}
+              <div key={idx} className={styles.entryGrid}>
+                <Input
                   placeholder="X-Custom-Header"
                   value={entry.key}
                   onChange={(e) =>
@@ -828,8 +828,7 @@ export function BaseProviderForm({
                   }
                   disabled={mutating}
                 />
-                <input
-                  className={styles.input}
+                <Input
                   placeholder="value"
                   value={entry.value}
                   onChange={(e) =>
@@ -842,9 +841,10 @@ export function BaseProviderForm({
                   }
                   disabled={mutating}
                 />
-                <button
+                <Button
                   type="button"
-                  className={styles.removeBtn}
+                  variant="destructive"
+                  size="icon-sm"
                   disabled={mutating || headersList.length <= 1}
                   onClick={() =>
                     updateField(
@@ -852,20 +852,22 @@ export function BaseProviderForm({
                       headersList.filter((_, i) => i !== idx)
                     )
                   }
+                  aria-label={t('common.delete')}
                 >
-                  <IconX size={12} />
-                </button>
+                  <XIcon data-icon="inline-start" />
+                </Button>
               </div>
             ))}
-            <button
+            <Button
               type="button"
-              className={styles.addBtn}
+              variant="secondary"
+              size="sm"
               disabled={mutating}
               onClick={() => updateField('headers', [...headersList, emptyHeader()])}
             >
-              <IconPlus size={12} />
+              <PlusIcon data-icon="inline-start" />
               <span>{t('providersPage.form.addHeader')}</span>
-            </button>
+            </Button>
           </div>
         </Collapsible>
       ) : null}
@@ -875,15 +877,16 @@ export function BaseProviderForm({
           <div className={styles.entriesList}>
             {discovery.available ? (
               <div className={styles.entriesToolbar}>
-                <button
+                <Button
                   type="button"
-                  className={styles.connectivityBtn}
+                  variant="secondary"
+                  size="sm"
                   onClick={openDiscovery}
                   disabled={mutating}
                 >
-                  <IconDownload size={14} />
+                  <DownloadIcon data-icon="inline-start" />
                   <span>{t('providersPage.discovery.openButton')}</span>
-                </button>
+                </Button>
               </div>
             ) : null}
             {discovery.available && discoveryOpen ? (
@@ -902,12 +905,8 @@ export function BaseProviderForm({
               />
             ) : null}
             {modelsList.map((entry, idx) => (
-              <div
-                key={idx}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8 }}
-              >
-                <input
-                  className={styles.input}
+              <div key={idx} className={styles.entryGrid}>
+                <Input
                   placeholder="model-name"
                   value={entry.name}
                   onChange={(e) =>
@@ -918,8 +917,7 @@ export function BaseProviderForm({
                   }
                   disabled={mutating}
                 />
-                <input
-                  className={styles.input}
+                <Input
                   placeholder="alias (optional)"
                   value={entry.alias ?? ''}
                   onChange={(e) =>
@@ -930,9 +928,10 @@ export function BaseProviderForm({
                   }
                   disabled={mutating}
                 />
-                <button
+                <Button
                   type="button"
-                  className={styles.removeBtn}
+                  variant="destructive"
+                  size="icon-sm"
                   disabled={mutating || modelsList.length <= 1}
                   onClick={() =>
                     updateField(
@@ -940,80 +939,84 @@ export function BaseProviderForm({
                       modelsList.filter((_, i) => i !== idx)
                     )
                   }
+                  aria-label={t('common.delete')}
                 >
-                  <IconX size={12} />
-                </button>
+                  <XIcon data-icon="inline-start" />
+                </Button>
               </div>
             ))}
-            <button
+            <Button
               type="button"
-              className={styles.addBtn}
+              variant="secondary"
+              size="sm"
               disabled={mutating}
               onClick={() => updateField('models', [...modelsList, emptyModel()])}
             >
-              <IconPlus size={12} />
+              <PlusIcon data-icon="inline-start" />
               <span>{t('providersPage.form.addModel')}</span>
-            </button>
+            </Button>
           </div>
         </Collapsible>
       ) : null}
 
       {descriptor.supportsExcludedModels ? (
         <Collapsible label={t('providersPage.form.excludedSection')}>
-          <div className={styles.field}>
-            <span className={styles.labelHint}>{t('providersPage.form.excludedHint')}</span>
-            <textarea
-              className={styles.textarea}
+          <Field>
+            <FieldDescription>{t('providersPage.form.excludedHint')}</FieldDescription>
+            <Textarea
               rows={4}
               value={form.excludedModelsText}
               onChange={(e) => updateField('excludedModelsText', e.target.value)}
               disabled={mutating}
               placeholder="model-1&#10;model-2"
             />
-          </div>
+          </Field>
         </Collapsible>
       ) : null}
 
       {descriptor.supportsCloak && form.cloak ? (
         <Collapsible label={t('providersPage.form.cloakSection')}>
-          <div className={styles.section}>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('providersPage.form.cloakMode')}</label>
-              <input
-                className={styles.input}
+          <FieldGroup className={styles.section}>
+            <Field>
+              <FieldLabel>{t('providersPage.form.cloakMode')}</FieldLabel>
+              <Input
                 value={form.cloak.mode}
                 onChange={(e) => updateCloak('mode', e.target.value)}
                 placeholder="auto / always / never"
                 disabled={mutating}
               />
-            </div>
+            </Field>
             <label className={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                className={styles.checkboxBox}
+              <Checkbox
                 checked={form.cloak.strictMode}
                 disabled={mutating}
-                onChange={(e) => updateCloak('strictMode', e.target.checked)}
+                onCheckedChange={(value) => updateCloak('strictMode', value === true)}
+                aria-label={t('providersPage.form.cloakStrict')}
               />
               <span className={styles.checkboxText}>
                 <span>{t('providersPage.form.cloakStrict')}</span>
               </span>
             </label>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('providersPage.form.cloakSensitiveWords')}</label>
-              <textarea
-                className={styles.textarea}
+            <Field>
+              <FieldLabel>{t('providersPage.form.cloakSensitiveWords')}</FieldLabel>
+              <Textarea
                 rows={3}
                 value={form.cloak.sensitiveWordsText}
                 onChange={(e) => updateCloak('sensitiveWordsText', e.target.value)}
                 disabled={mutating}
               />
-            </div>
-          </div>
+            </Field>
+          </FieldGroup>
         </Collapsible>
       ) : null}
 
-      {error ? <div className={styles.errorBox}>{error}</div> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>{t('common.error')}</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
     </form>
   );
 }

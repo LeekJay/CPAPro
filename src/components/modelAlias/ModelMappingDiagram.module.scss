@@ -291,6 +291,14 @@
   padding: $spacing-lg 0;
 }
 
+.diagramDialog {
+  max-width: 400px;
+}
+
+.diagramDialogWide {
+  max-width: 720px;
+}
+
 .settingsList {
   display: flex;
   flex-direction: column;

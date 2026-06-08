@@ -1,4 +1,5 @@
 import type { DragEvent, MouseEvent as ReactMouseEvent, RefObject } from 'react';
+import { Button } from '@/components/ui/button';
 import type { AliasNode, ProviderNode, SourceNode } from './ModelMappingDiagramTypes';
 import styles from './ModelMappingDiagram.module.scss';
 
@@ -59,15 +60,17 @@ export function ProviderColumn({
                 onContextMenu(e, 'provider', provider);
               }}
             >
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-xs"
                 className={styles.collapseBtn}
                 onClick={() => onToggleCollapse(provider)}
                 aria-label={collapsed ? expandLabel : collapseLabel}
                 title={collapsed ? expandLabel : collapseLabel}
               >
                 <span className={collapsed ? styles.chevronRight : styles.chevronDown} />
-              </button>
+              </Button>
               <span className={styles.providerLabel} style={{ color: getProviderColor(provider) }}>
                 {provider}
               </span>

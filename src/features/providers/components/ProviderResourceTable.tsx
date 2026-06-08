@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  IconAlertTriangle,
-  IconCheckCircle2,
-  IconEye,
-  IconPencil,
-  IconTrash2,
-} from '@/components/ui/icons';
+  AlertTriangleIcon,
+  CheckCircle2Icon,
+  EyeIcon,
+  PencilIcon,
+  Trash2Icon,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -14,8 +16,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/Table';
-import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
+} from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
 import { ProviderStatusBar } from '@/components/providers/ProviderStatusBar';
 import {
   getOpenAIProviderRecentStatusData,
@@ -135,25 +137,25 @@ export function ProviderResourceTable({
   const renderStatus = (r: ProviderResource) => {
     if (r.brand === 'ampcode' && r.flags.isPlaceholder) {
       return (
-        <span className={`${styles.statusBadge} ${styles.statusDisabled}`}>
-          <IconAlertTriangle size={14} />
+        <Badge variant="secondary" className={styles.statusBadge}>
+          <AlertTriangleIcon data-icon="inline-start" />
           {t('providersPage.status.notConfigured')}
-        </span>
+        </Badge>
       );
     }
     if (r.disabled) {
       return (
-        <span className={`${styles.statusBadge} ${styles.statusDisabled}`}>
-          <IconAlertTriangle size={14} />
+        <Badge variant="secondary" className={styles.statusBadge}>
+          <AlertTriangleIcon data-icon="inline-start" />
           {t('providersPage.status.disabled')}
-        </span>
+        </Badge>
       );
     }
     return (
-      <span className={`${styles.statusBadge} ${styles.statusActive}`}>
-        <IconCheckCircle2 size={14} />
+      <Badge variant="outline" className={styles.statusBadge}>
+        <CheckCircle2Icon data-icon="inline-start" />
         {t('providersPage.status.active')}
-      </span>
+      </Badge>
     );
   };
 
@@ -208,11 +210,12 @@ export function ProviderResourceTable({
   };
 
   return (
-    <Table
-      cols={columnWidths.map((w, i) => (
-        <col key={i} style={{ width: w }} />
-      ))}
-    >
+    <Table className={styles.resourceTable}>
+      <colgroup>
+        {columnWidths.map((w, i) => (
+          <col key={i} style={{ width: w }} />
+        ))}
+      </colgroup>
       <TableHeader>
         <TableRow>
           <TableHead>{t('providersPage.table.key')}</TableHead>
@@ -220,14 +223,17 @@ export function ProviderResourceTable({
           <TableHead>{t('providersPage.table.prefix')}</TableHead>
           <TableHead>{t('providersPage.table.models')}</TableHead>
           <TableHead>{t('providersPage.table.status')}</TableHead>
-          <TableHead alignRight>{t('providersPage.table.actions')}</TableHead>
+          <TableHead className={styles.alignRight}>{t('providersPage.table.actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {resources.map((resource) => {
           const isAmpcode = resource.brand === 'ampcode';
           return (
-            <TableRow key={resource.id} selected={resource.id === selectedId}>
+            <TableRow
+              key={resource.id}
+              data-state={resource.id === selectedId ? 'selected' : undefined}
+            >
               <TableCell>{renderPrimary(resource)}</TableCell>
               <TableCell>{renderBaseUrl(resource)}</TableCell>
               <TableCell>
@@ -266,20 +272,21 @@ export function ProviderResourceTable({
                   ) : null}
                 </div>
               </TableCell>
-              <TableCell alignRight>
+              <TableCell className={styles.alignRight}>
                 <div className={styles.actions}>
                   {!isAmpcode && onToggleDisabled ? (
                     <span
                       className={styles.toggleWrap}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <ToggleSwitch
+                      <Switch
+                        size="sm"
                         checked={!resource.disabled}
                         disabled={disableMutations}
-                        onChange={(value) =>
+                        onCheckedChange={(value) =>
                           onToggleDisabled(resource, !value)
                         }
-                        ariaLabel={
+                        aria-label={
                           resource.disabled
                             ? t('providersPage.actions.enable')
                             : t('providersPage.actions.disable')
@@ -287,9 +294,9 @@ export function ProviderResourceTable({
                       />
                     </span>
                   ) : null}
-                  <button
-                    type="button"
-                    className={styles.iconBtn}
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     aria-label={t('providersPage.actions.view')}
                     title={t('providersPage.actions.view')}
                     onClick={(e) => {
@@ -297,11 +304,11 @@ export function ProviderResourceTable({
                       onView(resource);
                     }}
                   >
-                    <IconEye size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.iconBtn}
+                    <EyeIcon data-icon="inline-start" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     aria-label={t('providersPage.actions.edit')}
                     title={t('providersPage.actions.edit')}
                     disabled={disableMutations}
@@ -310,12 +317,12 @@ export function ProviderResourceTable({
                       onEdit(resource);
                     }}
                   >
-                    <IconPencil size={16} />
-                  </button>
+                    <PencilIcon data-icon="inline-start" />
+                  </Button>
                   {isAmpcode ? (
-                    <button
-                      type="button"
-                      className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                    <Button
+                      variant="destructive"
+                      size="icon-sm"
                       aria-label={t('providersPage.actions.clear')}
                       title={t('providersPage.actions.clear')}
                       disabled={disableMutations || resource.flags.isPlaceholder}
@@ -324,12 +331,12 @@ export function ProviderResourceTable({
                         onDelete(resource);
                       }}
                     >
-                      <IconTrash2 size={16} />
-                    </button>
+                      <Trash2Icon data-icon="inline-start" />
+                    </Button>
                   ) : (
-                    <button
-                      type="button"
-                      className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                    <Button
+                      variant="destructive"
+                      size="icon-sm"
                       aria-label={t('providersPage.actions.delete')}
                       title={t('providersPage.actions.delete')}
                       disabled={disableMutations}
@@ -338,8 +345,8 @@ export function ProviderResourceTable({
                         onDelete(resource);
                       }}
                     >
-                      <IconTrash2 size={16} />
-                    </button>
+                      <Trash2Icon data-icon="inline-start" />
+                    </Button>
                   )}
                 </div>
               </TableCell>

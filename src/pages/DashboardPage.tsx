@@ -1,12 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  IconKey,
-  IconBot,
-  IconFileText,
-  IconSatellite
-} from '@/components/ui/icons';
+  ArrowUpRightIcon,
+  BotIcon,
+  CheckCircle2Icon,
+  CircleAlertIcon,
+  CircleDashedIcon,
+  Clock3Icon,
+  FileKey2Icon,
+  FileTextIcon,
+  KeyRoundIcon,
+  NetworkIcon,
+  SatelliteIcon
+} from 'lucide-react';
 import { useAuthStore, useConfigStore, useModelsStore } from '@/stores';
 import { apiKeysApi, providersApi, authFilesApi } from '@/services/api';
 import styles from './DashboardPage.module.scss';
@@ -14,7 +21,7 @@ import styles from './DashboardPage.module.scss';
 interface QuickStat {
   label: string;
   value: number | string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   path: string;
   loading?: boolean;
   sublabel?: string;
@@ -65,8 +72,6 @@ export function DashboardPage() {
   });
 
   const [loading, setLoading] = useState(true);
-
-  // Time-of-day state for dynamic greeting
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(getTimeOfDay);
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
@@ -76,7 +81,6 @@ export function DashboardPage() {
     apiKeysCache.current = [];
   }, [apiBase, config?.apiKeys]);
 
-  // Update time every 60 seconds
   useEffect(() => {
     const id = setInterval(() => {
       setTimeOfDay(getTimeOfDay());
@@ -99,7 +103,7 @@ export function DashboardPage() {
         typeof item === 'string'
           ? item
           : record
-            ? (record['api-key'] ?? record['apiKey'] ?? record.key ?? record.Key)
+            ? (record['api-key'] ?? record.apiKey ?? record.key ?? record.Key)
             : '';
       const trimmed = String(value ?? '').trim();
       if (!trimmed || seen.has(trimmed)) return;
@@ -151,14 +155,15 @@ export function DashboardPage() {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        const [keysRes, filesRes, geminiRes, codexRes, claudeRes, openaiRes] = await Promise.allSettled([
-          apiKeysApi.list(),
-          authFilesApi.list(),
-          providersApi.getGeminiKeys(),
-          providersApi.getCodexConfigs(),
-          providersApi.getClaudeConfigs(),
-          providersApi.getOpenAIProviders()
-        ]);
+        const [keysRes, filesRes, geminiRes, codexRes, claudeRes, openaiRes] =
+          await Promise.allSettled([
+            apiKeysApi.list(),
+            authFilesApi.list(),
+            providersApi.getGeminiKeys(),
+            providersApi.getCodexConfigs(),
+            providersApi.getClaudeConfigs(),
+            providersApi.getOpenAIProviders()
+          ]);
 
         setStats({
           apiKeys: keysRes.status === 'fulfilled' ? keysRes.value.length : null,
@@ -184,7 +189,6 @@ export function DashboardPage() {
     }
   }, [connectionStatus, fetchModels]);
 
-  // Calculate total provider keys only when all provider stats are available.
   const providerStatsReady =
     providerStats.gemini !== null &&
     providerStats.codex !== null &&
@@ -206,7 +210,7 @@ export function DashboardPage() {
     {
       label: t('dashboard.management_keys'),
       value: stats.apiKeys ?? '-',
-      icon: <IconKey size={24} />,
+      icon: <KeyRoundIcon />,
       path: '/config',
       loading: loading && stats.apiKeys === null,
       sublabel: t('nav.config_management')
@@ -214,9 +218,9 @@ export function DashboardPage() {
     {
       label: t('nav.ai_providers'),
       value: loading ? '-' : providerStatsReady ? totalProviderKeys : '-',
-      icon: <IconBot size={24} />,
+      icon: <BotIcon />,
       path: '/ai-providers',
-      loading: loading,
+      loading,
       sublabel: hasProviderStats
         ? t('dashboard.provider_keys_detail', {
             gemini: providerStats.gemini ?? '-',
@@ -229,7 +233,7 @@ export function DashboardPage() {
     {
       label: t('nav.auth_files'),
       value: stats.authFiles ?? '-',
-      icon: <IconFileText size={24} />,
+      icon: <FileKey2Icon />,
       path: '/auth-files',
       loading: loading && stats.authFiles === null,
       sublabel: t('dashboard.oauth_credentials')
@@ -237,7 +241,7 @@ export function DashboardPage() {
     {
       label: t('dashboard.available_models'),
       value: modelsLoading ? '-' : models.length,
-      icon: <IconSatellite size={24} />,
+      icon: <SatelliteIcon />,
       path: '/system',
       loading: modelsLoading,
       sublabel: t('dashboard.available_models_desc')
@@ -260,7 +264,6 @@ export function DashboardPage() {
         ? styles.configBadgeFillFirst
         : styles.configBadgeUnknown;
 
-  // Derived time-based values
   const greetingKey = `dashboard.greeting_${timeOfDay}`;
   const caringKey = `dashboard.caring_${timeOfDay}`;
 
@@ -276,50 +279,42 @@ export function DashboardPage() {
     minute: '2-digit'
   });
 
+  const statusLabel = serverVersion
+    ? `v${serverVersion.trim().replace(/^[vV]+/, '')}`
+    : t(
+        connectionStatus === 'connected'
+          ? 'common.connected'
+          : connectionStatus === 'connecting'
+            ? 'common.connecting'
+            : 'common.disconnected'
+      );
+  const StatusIcon =
+    connectionStatus === 'connected'
+      ? CheckCircle2Icon
+      : connectionStatus === 'connecting'
+        ? CircleDashedIcon
+        : CircleAlertIcon;
+
   return (
     <div className={styles.dashboard}>
-      {/* Decorative background orbs */}
-      <div className={styles.backgroundOrbs} aria-hidden="true">
-        <div className={styles.orb1} />
-        <div className={styles.orb2} />
-      </div>
-
-      {/* Hero welcome section */}
-      <section className={styles.hero}>
-        <span className={styles.heroWatermark} aria-hidden="true">
-          OVERVIEW
-        </span>
-        <div className={styles.heroContent}>
-          <span className={styles.heroGreeting}>{t(greetingKey)}</span>
-          <h1 className={styles.heroTitle}>{t('dashboard.welcome_back')}</h1>
-          <p className={styles.heroCaring}>{t(caringKey)}</p>
+      <section className={styles.pageHeader}>
+        <div className={styles.titleBlock}>
+          <span className={styles.eyebrow}>{t(greetingKey)}</span>
+          <h1 className={styles.pageTitle}>{t('dashboard.welcome_back')}</h1>
+          <p className={styles.pageSubtitle}>{t(caringKey)}</p>
         </div>
-        <div className={styles.heroMeta}>
-          <div className={styles.dateTimeBlock}>
-            <span className={styles.time}>{formattedTime}</span>
-            <span className={styles.date}>{formattedDate}</span>
+
+        <div className={styles.headerMeta}>
+          <div className={styles.timeCard}>
+            <Clock3Icon />
+            <div>
+              <span className={styles.time}>{formattedTime}</span>
+              <span className={styles.date}>{formattedDate}</span>
+            </div>
           </div>
-          <div className={styles.connectionPill}>
-            <span
-              className={`${styles.statusDot} ${
-                connectionStatus === 'connected'
-                  ? styles.connected
-                  : connectionStatus === 'connecting'
-                    ? styles.connecting
-                    : styles.disconnected
-              }`}
-            />
-            <span className={styles.pillText}>
-              {serverVersion
-                ? `v${serverVersion.trim().replace(/^[vV]+/, '')}`
-                : t(
-                    connectionStatus === 'connected'
-                      ? 'common.connected'
-                      : connectionStatus === 'connecting'
-                        ? 'common.connecting'
-                        : 'common.disconnected'
-                  )}
-            </span>
+          <div className={`${styles.statusBadge} ${styles[connectionStatus]}`}>
+            <StatusIcon />
+            <span>{statusLabel}</span>
           </div>
           {serverBuildDate && (
             <span className={styles.buildDate}>
@@ -329,25 +324,32 @@ export function DashboardPage() {
         </div>
       </section>
 
-      {/* Bento stats grid */}
-      <section className={styles.statsSection}>
-        <h2 className={styles.sectionHeading}>{t('dashboard.system_overview')}</h2>
-        <div className={styles.bentoGrid}>
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <div>
+            <h2>{t('dashboard.system_overview')}</h2>
+            <p>{apiBase || t('common.disconnected_status', { defaultValue: 'Disconnected' })}</p>
+          </div>
+          <NetworkIcon />
+        </div>
+
+        <div className={styles.statsGrid}>
           {quickStats.map((stat, index) => (
             <Link
               key={stat.path}
               to={stat.path}
-              className={`${styles.bentoCard} ${index === 0 ? styles.bentoLarge : ''}`}
-              style={{ animationDelay: `${index * 80}ms` }}
+              className={`${styles.statCard} ${index === 0 ? styles.primaryStat : ''}`}
+              aria-busy={stat.loading}
             >
-              <div className={styles.bentoIcon}>{stat.icon}</div>
-              <div className={styles.bentoContent}>
-                <span className={styles.bentoValue}>
-                  {stat.loading ? '...' : stat.value}
-                </span>
-                <span className={styles.bentoLabel}>{stat.label}</span>
+              <div className={styles.statTop}>
+                <span className={styles.statIcon}>{stat.icon}</span>
+                <ArrowUpRightIcon className={styles.statArrow} />
+              </div>
+              <div className={styles.statBody}>
+                <span className={styles.statValue}>{stat.loading ? '...' : stat.value}</span>
+                <span className={styles.statLabel}>{stat.label}</span>
                 {stat.sublabel && !stat.loading && (
-                  <span className={styles.bentoSublabel}>{stat.sublabel}</span>
+                  <span className={styles.statSublabel}>{stat.sublabel}</span>
                 )}
               </div>
             </Link>
@@ -355,48 +357,56 @@ export function DashboardPage() {
         </div>
       </section>
 
-      {/* Config pills section */}
       {config && (
-        <section className={styles.configSection}>
-          <h2 className={styles.sectionHeading}>{t('dashboard.current_config')}</h2>
-          <div className={styles.configPillGrid}>
-            <div className={styles.configPill}>
-              <span className={styles.configPillLabel}>{t('basic_settings.debug_enable')}</span>
-              <span className={`${styles.configPillValue} ${config.debug ? styles.on : styles.off}`}>
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <h2>{t('dashboard.current_config')}</h2>
+              <p>{t('dashboard.edit_settings')}</p>
+            </div>
+            <FileTextIcon />
+          </div>
+
+          <div className={styles.configGrid}>
+            <div className={styles.configItem}>
+              <span>{t('basic_settings.debug_enable')}</span>
+              <strong className={config.debug ? styles.badgeOn : styles.badgeOff}>
                 {config.debug ? t('common.yes') : t('common.no')}
-              </span>
+              </strong>
             </div>
-            <div className={styles.configPill}>
-              <span className={styles.configPillLabel}>{t('basic_settings.logging_to_file_enable')}</span>
-              <span className={`${styles.configPillValue} ${config.loggingToFile ? styles.on : styles.off}`}>
+            <div className={styles.configItem}>
+              <span>{t('basic_settings.logging_to_file_enable')}</span>
+              <strong className={config.loggingToFile ? styles.badgeOn : styles.badgeOff}>
                 {config.loggingToFile ? t('common.yes') : t('common.no')}
-              </span>
+              </strong>
             </div>
-            <div className={styles.configPill}>
-              <span className={styles.configPillLabel}>{t('basic_settings.retry_count_label')}</span>
-              <span className={styles.configPillValue}>{config.requestRetry ?? 0}</span>
+            <div className={styles.configItem}>
+              <span>{t('basic_settings.retry_count_label')}</span>
+              <strong>{config.requestRetry ?? 0}</strong>
             </div>
-            <div className={styles.configPill}>
-              <span className={styles.configPillLabel}>{t('basic_settings.ws_auth_enable')}</span>
-              <span className={`${styles.configPillValue} ${config.wsAuth ? styles.on : styles.off}`}>
+            <div className={styles.configItem}>
+              <span>{t('basic_settings.ws_auth_enable')}</span>
+              <strong className={config.wsAuth ? styles.badgeOn : styles.badgeOff}>
                 {config.wsAuth ? t('common.yes') : t('common.no')}
-              </span>
+              </strong>
             </div>
-            <div className={styles.configPill}>
-              <span className={styles.configPillLabel}>{t('dashboard.routing_strategy')}</span>
-              <span className={`${styles.configBadge} ${routingStrategyBadgeClass}`}>
+            <div className={styles.configItem}>
+              <span>{t('dashboard.routing_strategy')}</span>
+              <strong className={`${styles.configBadge} ${routingStrategyBadgeClass}`}>
                 {routingStrategyDisplay}
-              </span>
+              </strong>
             </div>
             {config.proxyUrl && (
-              <div className={`${styles.configPill} ${styles.configPillWide}`}>
-                <span className={styles.configPillLabel}>{t('basic_settings.proxy_url_label')}</span>
-                <span className={styles.configPillMono}>{config.proxyUrl}</span>
+              <div className={`${styles.configItem} ${styles.configItemWide}`}>
+                <span>{t('basic_settings.proxy_url_label')}</span>
+                <code>{config.proxyUrl}</code>
               </div>
             )}
           </div>
+
           <Link to="/config" className={styles.viewMoreLink}>
-            {t('dashboard.edit_settings')} →
+            <span>{t('dashboard.edit_settings')}</span>
+            <ArrowUpRightIcon />
           </Link>
         </section>
       )}

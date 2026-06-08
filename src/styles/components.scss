@@ -187,8 +187,8 @@ textarea {
 
 .notification-container {
   position: fixed;
-  top: $spacing-lg;
   right: $spacing-lg;
+  bottom: $spacing-lg;
   display: flex;
   flex-direction: column;
   gap: $spacing-sm;
@@ -199,38 +199,28 @@ textarea {
 @keyframes notification-enter {
   from {
     opacity: 0;
-    transform: translateX(100%);
+    transform: translate(16px, 8px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate(0, 0);
   }
 }
 
 @keyframes notification-exit {
   from {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate(0, 0);
   }
   to {
     opacity: 0;
-    transform: translateX(100%);
+    transform: translate(16px, 8px);
   }
 }
 
 .notification {
-  padding: $spacing-md;
-  border-radius: $radius-md;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: $spacing-sm;
+  width: min(360px, calc(100vw - #{$spacing-lg * 2}));
 
-  // Animation states
   &.entering {
     animation: notification-enter 0.3s ease-out forwards;
   }
@@ -238,44 +228,18 @@ textarea {
   &.exiting {
     animation: notification-exit 0.3s ease-in forwards;
   }
+}
 
-  &.success {
-    border-color: rgba($success-color, 0.4);
-  }
-  &.warning {
-    border-color: rgba($warning-color, 0.4);
-  }
-  &.error {
-    border-color: rgba($error-color, 0.4);
-  }
-
-  .message {
-    flex: 1;
-    font-weight: 500;
+@media (max-width: $breakpoint-mobile) {
+  .notification-container {
+    right: $spacing-md;
+    bottom: $spacing-md;
+    left: $spacing-md;
+    max-width: none;
   }
 
-  .close-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    border-radius: $radius-md;
-    cursor: pointer;
-    transition: color 0.15s ease, background-color 0.15s ease;
-
-    svg {
-      display: block;
-    }
-
-    &:hover {
-      color: var(--text-primary);
-      background: var(--bg-secondary);
-    }
+  .notification {
+    width: 100%;
   }
 }
 

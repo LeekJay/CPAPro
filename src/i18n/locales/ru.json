@@ -57,13 +57,13 @@
     "unsaved_changes_message": "У вас есть несохранённые изменения. Если вы уйдёте, они будут потеряны. Выйти?"
   },
   "title": {
-    "main": "Центр управления CLI Proxy API",
-    "login": "Центр управления CLI Proxy API",
-    "abbr": "CPAMC"
+    "main": "CPAPro",
+    "login": "CPAPro",
+    "abbr": "CPAPro"
   },
   "splash": {
-    "title": "CLI Proxy API",
-    "subtitle": "Центр управления"
+    "title": "CPAPro",
+    "subtitle": "CPAPro, a modern CLIProxyAPI panel."
   },
   "auto_login": {
     "title": "Автовход...",
@@ -138,7 +138,7 @@
   },
   "dashboard": {
     "title": "Панель управления",
-    "subtitle": "Добро пожаловать в Центр управления CLI Proxy API",
+    "subtitle": "CPAPro, a modern CLIProxyAPI panel.",
     "openai_providers": "Поставщики OpenAI",
     "quick_actions": "Быстрые действия",
     "current_config": "Текущая конфигурация",
@@ -213,11 +213,15 @@
     "title_section": "Файлы авторизации",
     "description": "Управляйте всеми JSON-файлами авторизации CLI Proxy (например, Qwen, Gemini, Vertex). Загрузка учётных данных сразу включает соответствующую интеграцию AI.",
     "upload_button": "Загрузить файл",
+    "add_account_button": "Добавить аккаунт",
+    "add_account_channel_button": "Выбрать канал аккаунта",
     "delete_all_button": "Удалить всё",
     "empty_title": "Файлы авторизации отсутствуют",
     "empty_desc": "Нажмите кнопку выше, чтобы загрузить первый файл",
     "search_empty_title": "Файлы не найдены",
     "search_empty_desc": "Попробуйте изменить фильтры или очистить строку поиска.",
+    "filter_empty_title": "Подходящих файлов авторизации нет",
+    "filter_empty_desc": "Для выбранного типа Provider нет файлов авторизации.",
     "file_size": "Размер",
     "file_modified": "Изменён",
     "health_status_label": "Состояние",
@@ -307,7 +311,11 @@
     "type_empty": "Пусто",
     "type_unknown": "Другое",
     "type_virtual": "Виртуальный файл авторизации",
+    "table_provider": "Provider Icon",
+    "table_email": "Email",
+    "table_status_control": "Status Control",
     "models_button": "Модели",
+    "viewer_button": "Viewer",
     "models_title": "Поддерживаемые модели",
     "models_loading": "Загрузка списка моделей...",
     "models_empty": "Для этих учётных данных нет доступных моделей",
@@ -1069,11 +1077,24 @@
     "refresh_files": "Обновить файлы авторизации",
     "refresh_files_and_quota": "Обновить файлы и квоты",
     "refresh_all_credentials": "Обновить все учётные данные",
-    "card_idle_hint": "Используйте кнопку «Обновить все учётные данные» сверху, чтобы загрузить актуальные данные по квотам."
+    "refresh_section_credentials": "Обновить учётные данные {{provider}}",
+    "too_many_title": "Слишком много учётных данных",
+    "card_idle_hint": "Обновить квоту",
+    "provider_type": "Provider Type Badge",
+    "email": "Email",
+    "quota": "Quota",
+    "reset_time": "Reset Time",
+    "empty_title": "Нет учётных данных с квотами",
+    "empty_desc": "Среди включённых файлов авторизации нет данных, поддерживающих проверку квот.",
+    "no_quota": "Нет данных квоты",
+    "retry_quota": "Повторить",
+    "more_quota_items": "+{{count}} ещё",
+    "refresh_all_success": "Обновлено записей квот: {{count}}",
+    "refresh_all_partial": "Обновление квот завершено: успешно {{success}}, ошибок {{failed}}"
   },
   "system_info": {
     "title": "Информация о центре управления",
-    "about_title": "CLI Proxy API Management Center",
+    "about_title": "CPAPro",
     "connection_status_title": "Статус подключения",
     "api_status_label": "Статус API:",
     "config_status_label": "Статус конфигурации:",
@@ -1105,7 +1126,7 @@
     "link_main_repo": "Основной репозиторий",
     "link_main_repo_desc": "Исходный код основной программы CLI Proxy API",
     "link_webui_repo": "Репозиторий WebUI",
-    "link_webui_repo_desc": "Исходный код фронтенда центра управления",
+    "link_webui_repo_desc": "Исходный код фронтенда CPAPro",
     "link_docs": "Документация",
     "link_docs_desc": "Учебные пособия и руководства по настройке",
     "clear_login_title": "Локальные данные входа",
@@ -1213,6 +1234,11 @@
       "providerFamilies": "{{count}} семейств",
       "updatedAt": "Обновлено {{time}}",
       "issueCount": "{{count}} проблем"
+    },
+    "empty": {
+      "loadFailedTitle": "Не удалось загрузить настройки провайдеров",
+      "noSnapshotTitle": "Настройки провайдеров ещё не загружены",
+      "noSnapshotDescription": "Подключитесь к backend и обновите страницу, чтобы увидеть настройки Gemini, Codex, Claude, Vertex, OpenAI Compatible и Amp CLI."
     },
     "actions": {
       "refresh": "Обновить",

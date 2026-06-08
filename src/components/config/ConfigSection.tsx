@@ -6,11 +6,12 @@ interface ConfigSectionProps extends Omit<HTMLAttributes<HTMLElement>, 'title'> 
   description?: ReactNode;
   indexLabel?: ReactNode;
   icon?: ReactNode;
+  action?: ReactNode;
 }
 
 export const ConfigSection = forwardRef<HTMLElement, PropsWithChildren<ConfigSectionProps>>(
   function ConfigSection(
-    { title, description, indexLabel, icon, className, children, ...rest },
+    { title, description, indexLabel, icon, action, className, children, ...rest },
     ref
   ) {
     const sectionClassName = [styles.section, className].filter(Boolean).join(' ');
@@ -22,10 +23,13 @@ export const ConfigSection = forwardRef<HTMLElement, PropsWithChildren<ConfigSec
             {indexLabel ? <span className={styles.indexBadge}>{indexLabel}</span> : null}
             {icon ? <span className={styles.iconBadge}>{icon}</span> : null}
           </div>
+        <div className={styles.headingRow}>
           <div className={styles.headingGroup}>
             <h2 className={styles.title}>{title}</h2>
             {description ? <p className={styles.description}>{description}</p> : null}
           </div>
+          {action ? <div className={styles.action}>{action}</div> : null}
+        </div>
         </header>
         <div className={styles.content}>{children}</div>
       </section>

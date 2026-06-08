@@ -10,7 +10,7 @@
 @use './layout.scss';
 
 body {
-  background-color: var(--bg-secondary);
+  background-color: var(--background);
   color: var(--text-primary);
   transition: background-color $transition-normal, color $transition-normal;
 }
@@ -24,23 +24,18 @@ body.modal-open .content {
   overflow: hidden;
 }
 
-// 滚动条样式
+// 隐藏浏览器原生滚动条，但保留滚动能力。
+html,
+body,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: $radius-full;
-
-  &:hover {
-    background: var(--border-hover);
-  }
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 // 通用工具类

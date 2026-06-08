@@ -57,13 +57,13 @@
     "unsaved_changes_message": "你有未保存的更改，离开后将丢失这些更改。确定要离开吗？"
   },
   "title": {
-    "main": "CLI Proxy API Management Center",
-    "login": "CLI Proxy API Management Center",
-    "abbr": "CPAMC"
+    "main": "CPAPro",
+    "login": "CPAPro",
+    "abbr": "CPAPro"
   },
   "splash": {
-    "title": "CLI Proxy API",
-    "subtitle": "管理中心"
+    "title": "CPAPro",
+    "subtitle": "CPAPro, a modern CLIProxyAPI panel."
   },
   "auto_login": {
     "title": "正在自动登录...",
@@ -138,7 +138,7 @@
   },
   "dashboard": {
     "title": "仪表盘",
-    "subtitle": "欢迎使用 CLI Proxy API 管理中心",
+    "subtitle": "CPAPro, a modern CLIProxyAPI panel.",
     "openai_providers": "OpenAI 提供商",
     "quick_actions": "快捷操作",
     "current_config": "当前配置",
@@ -213,11 +213,15 @@
     "title_section": "认证文件",
     "description": "这里集中管理 CLI Proxy 支持的所有 JSON 认证文件（如 Qwen、Gemini、Vertex 等），上传后即可在运行时启用相应的 AI 服务。",
     "upload_button": "上传文件",
+    "add_account_button": "添加账号",
+    "add_account_channel_button": "选择账号渠道",
     "delete_all_button": "删除全部",
     "empty_title": "暂无认证文件",
     "empty_desc": "点击上方按钮上传第一个文件",
     "search_empty_title": "没有匹配的配置文件",
     "search_empty_desc": "请调整筛选条件或清空搜索关键字再试一次。",
+    "filter_empty_title": "没有匹配的认证文件",
+    "filter_empty_desc": "当前 Provider 类型下暂无认证文件。",
     "file_size": "大小",
     "file_modified": "修改时间",
     "health_status_label": "健康状态",
@@ -307,7 +311,11 @@
     "type_empty": "空文件",
     "type_unknown": "其他",
     "type_virtual": "虚拟认证文件",
+    "table_provider": "Provider Icon",
+    "table_email": "Email",
+    "table_status_control": "Status Control",
     "models_button": "模型",
+    "viewer_button": "Viewer",
     "models_title": "支持的模型",
     "models_loading": "正在加载模型列表...",
     "models_empty": "该凭证暂无可用模型",
@@ -1072,11 +1080,24 @@
     "refresh_files": "刷新认证文件",
     "refresh_files_and_quota": "刷新认证文件&额度",
     "refresh_all_credentials": "刷新全部凭证",
-    "card_idle_hint": "请使用顶部“刷新全部凭证”按钮获取最新额度。"
+    "refresh_section_credentials": "刷新 {{provider}} 凭证",
+    "too_many_title": "凭证数量过多",
+    "card_idle_hint": "刷新额度",
+    "provider_type": "Provider Type Badge",
+    "email": "Email",
+    "quota": "Quota",
+    "reset_time": "Reset Time",
+    "empty_title": "暂无可查看的配额凭证",
+    "empty_desc": "认证文件中没有支持配额查询的启用凭证。",
+    "no_quota": "暂无配额数据",
+    "retry_quota": "重试",
+    "more_quota_items": "+{{count}} 条",
+    "refresh_all_success": "已刷新 {{count}} 个配额",
+    "refresh_all_partial": "配额刷新完成，成功 {{success}} 个，失败 {{failed}} 个"
   },
   "system_info": {
     "title": "管理中心信息",
-    "about_title": "CLI Proxy API Management Center",
+    "about_title": "CPAPro",
     "connection_status_title": "连接状态",
     "api_status_label": "API 状态:",
     "config_status_label": "配置状态:",
@@ -1108,7 +1129,7 @@
     "link_main_repo": "主程序仓库",
     "link_main_repo_desc": "CLI Proxy API 核心程序源代码",
     "link_webui_repo": "WebUI 仓库",
-    "link_webui_repo_desc": "管理中心前端界面源代码",
+    "link_webui_repo_desc": "CPAPro 前端界面源代码",
     "link_docs": "使用教程",
     "link_docs_desc": "配置指南和使用说明",
     "clear_login_title": "本地登录信息",
@@ -1216,6 +1237,11 @@
       "providerFamilies": "{{count}} 个提供商家族",
       "updatedAt": "更新于 {{time}}",
       "issueCount": "{{count}} 个问题"
+    },
+    "empty": {
+      "loadFailedTitle": "提供商配置加载失败",
+      "noSnapshotTitle": "尚未加载提供商配置",
+      "noSnapshotDescription": "连接到后端后刷新，即可查看 Gemini、Codex、Claude、Vertex、OpenAI 兼容与 Amp CLI 配置。"
     },
     "actions": {
       "refresh": "刷新",

@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import path from 'path';
 import { execSync } from 'child_process';
@@ -35,13 +36,33 @@ function getVersion(): string {
   return 'dev';
 }
 
+function managementHtmlOutput() {
+  return {
+    name: 'management-html-output',
+    apply: 'build' as const,
+    closeBundle() {
+      const outDir = path.resolve(__dirname, 'dist');
+      const indexHtml = path.join(outDir, 'index.html');
+      const managementHtml = path.join(outDir, 'management.html');
+
+      if (!fs.existsSync(indexHtml)) return;
+      if (fs.existsSync(managementHtml)) {
+        fs.rmSync(managementHtml, { force: true });
+      }
+      fs.renameSync(indexHtml, managementHtml);
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react(),
     viteSingleFile({
       removeViteModuleLoader: true
-    })
+    }),
+    managementHtmlOutput()
   ],
   define: {
     __APP_VERSION__: JSON.stringify(getVersion())
@@ -49,6 +70,22 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
+    }
+  },
+  server: {
+    watch: {
+      ignored: [
+        '**/.codex-chrome*/**',
+        '**/chrome-*.log',
+        '**/codex-*.png',
+        '**/dist/**',
+      ],
+    },
+    proxy: {
+      '/v0/management': {
+        target: 'http://127.0.0.1:8317',
+        changeOrigin: true
+      }
     }
   },
   css: {

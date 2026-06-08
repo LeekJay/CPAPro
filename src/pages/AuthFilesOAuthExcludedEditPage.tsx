@@ -1,13 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
+import { InfoIcon, LoaderCircleIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/shadcn-card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { IconInfo } from '@/components/ui/icons';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
 import { SecondaryScreenShell } from '@/components/common/SecondaryScreenShell';
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import { useAuthStore, useNotificationStore } from '@/stores';
@@ -295,6 +305,28 @@ export function AuthFilesOAuthExcludedEditPage() {
   }, [handleBack, provider, selectedModels, showNotification, t]);
 
   const canSave = !disableControls && !saving && !excludedUnsupported;
+  const renderEmpty = (title: string, description?: string) => (
+    <Empty className={styles.emptyState}>
+      <EmptyHeader>
+        <EmptyTitle>{title}</EmptyTitle>
+        {description ? <EmptyDescription>{description}</EmptyDescription> : null}
+      </EmptyHeader>
+    </Empty>
+  );
+
+  const renderModelsSkeleton = () => (
+    <div className={styles.modelList} aria-label={t('common.loading')}>
+      {Array.from({ length: 5 }, (_, index) => (
+        <div key={index} className={styles.modelSkeletonRow}>
+          <Skeleton className={styles.modelSkeletonCheck} />
+          <div className={styles.modelSkeletonText}>
+            <Skeleton className={styles.modelSkeletonLineWide} />
+            <Skeleton className={styles.modelSkeletonLine} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <SecondaryScreenShell
@@ -313,24 +345,26 @@ export function AuthFilesOAuthExcludedEditPage() {
       loadingLabel={t('common.loading')}
     >
       {excludedUnsupported ? (
-        <Card>
-          <EmptyState
-            title={t('oauth_excluded.upgrade_required_title')}
-            description={t('oauth_excluded.upgrade_required_desc')}
-          />
+        <Card className={styles.settingsCard}>
+          <CardContent className={styles.emptyCardContent}>
+            {renderEmpty(
+              t('oauth_excluded.upgrade_required_title'),
+              t('oauth_excluded.upgrade_required_desc')
+            )}
+          </CardContent>
         </Card>
       ) : (
         <>
           <Card className={styles.settingsCard}>
-            <div className={styles.settingsHeader}>
+            <CardHeader className={styles.settingsHeader}>
               <div className={styles.settingsHeaderTitle}>
-                <IconInfo size={16} />
+                <InfoIcon />
                 <span>{t('oauth_excluded.title')}</span>
               </div>
               <div className={styles.settingsHeaderHint}>{t('oauth_excluded.description')}</div>
-            </div>
+            </CardHeader>
 
-            <div className={styles.settingsSection}>
+            <CardContent className={styles.settingsSection}>
               <div className={styles.settingsRow}>
                 <div className={styles.settingsInfo}>
                   <div className={styles.settingsLabel}>{t('oauth_excluded.provider_label')}</div>
@@ -367,17 +401,17 @@ export function AuthFilesOAuthExcludedEditPage() {
                   })}
                 </div>
               )}
-            </div>
+            </CardContent>
           </Card>
 
           <Card className={styles.settingsCard}>
-            <div className={styles.settingsHeader}>
-              <div className={styles.settingsHeaderTitle}>{t('oauth_excluded.models_label')}</div>
+            <CardHeader className={styles.settingsHeader}>
+              <CardTitle>{t('oauth_excluded.models_label')}</CardTitle>
               {resolvedProviderKey && (
                 <div className={styles.modelsHint}>
                   {modelsLoading ? (
                     <>
-                      <LoadingSpinner size={14} />
+                      <LoaderCircleIcon className={styles.inlineSpinner} />
                       <span>{t('oauth_excluded.models_loading')}</span>
                     </>
                   ) : modelsError === 'unsupported' ? (
@@ -389,34 +423,31 @@ export function AuthFilesOAuthExcludedEditPage() {
                   )}
                 </div>
               )}
-            </div>
+            </CardHeader>
 
             {modelsLoading ? (
-              <div className={styles.loadingModels}>
-                <LoadingSpinner size={16} />
-                <span>{t('common.loading')}</span>
-              </div>
+              renderModelsSkeleton()
             ) : modelsList.length > 0 ? (
               <div className={styles.modelList}>
                 {modelsList.map((model) => {
                   const checked = selectedModels.has(model.id);
                   return (
-                    <SelectionCheckbox
+                    <label
                       key={model.id}
-                      checked={checked}
-                      disabled={disableControls || saving}
-                      onChange={(value) => toggleModel(model.id, value)}
                       className={styles.modelItem}
-                      labelClassName={styles.modelText}
-                      label={
-                        <>
+                    >
+                      <Checkbox
+                        checked={checked}
+                        disabled={disableControls || saving}
+                        onCheckedChange={(value) => toggleModel(model.id, value === true)}
+                      />
+                      <span className={styles.modelText}>
                           <span className={styles.modelId}>{model.id}</span>
                           {model.display_name && model.display_name !== model.id && (
                             <span className={styles.modelDisplayName}>{model.display_name}</span>
                           )}
-                        </>
-                      }
-                    />
+                      </span>
+                    </label>
                   );
                 })}
               </div>

@@ -1,12 +1,21 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  IconChevronDown,
-  IconChevronUp,
-  IconSlidersHorizontal,
-} from '@/components/ui/icons';
-import { Select } from '@/components/ui/Select';
-import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
+  ChevronDownIcon,
+  ChevronUpIcon,
+  SlidersHorizontalIcon,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { OptionSelect } from '@/components/ui/shadcn-option-select';
 import styles from './OpenAIBrandToolbar.module.scss';
 
 export type OpenAISortBy = 'name' | 'priority' | 'recent-success';
@@ -32,8 +41,6 @@ export function OpenAIBrandToolbar({
   onSelectedModelsChange,
 }: OpenAIBrandToolbarProps) {
   const { t } = useTranslation();
-  const [filterOpen, setFilterOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const sortOptions = useMemo(
     () => [
@@ -46,20 +53,6 @@ export function OpenAIBrandToolbar({
     ],
     [t]
   );
-
-  useEffect(() => {
-    if (!filterOpen) return;
-    const onClickOutside = (e: PointerEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setFilterOpen(false);
-      }
-    };
-    document.addEventListener('pointerdown', onClickOutside);
-    return () => document.removeEventListener('pointerdown', onClickOutside);
-  }, [filterOpen]);
 
   const toggleModel = (name: string) => {
     const next = new Set(selectedModels);
@@ -83,16 +76,15 @@ export function OpenAIBrandToolbar({
     <div className={styles.root}>
       <div className={styles.sortGroup}>
         <span className={styles.label}>{t('providersPage.toolbar.sortBy')}</span>
-        <Select
+        <OptionSelect
           value={sortBy}
           options={sortOptions}
           onChange={(value) => onSortBy(value as OpenAISortBy)}
           ariaLabel={t('providersPage.toolbar.sortBy')}
-          size="sm"
         />
-        <button
-          type="button"
-          className={styles.dirBtn}
+        <Button
+          variant="outline"
+          size="icon-sm"
           onClick={() => onSortDir(sortDir === 'asc' ? 'desc' : 'asc')}
           aria-label={
             sortDir === 'asc'
@@ -106,64 +98,63 @@ export function OpenAIBrandToolbar({
           }
         >
           {sortDir === 'asc' ? (
-            <IconChevronUp size={14} />
+            <ChevronUpIcon data-icon="inline-start" />
           ) : (
-            <IconChevronDown size={14} />
+            <ChevronDownIcon data-icon="inline-start" />
           )}
-        </button>
+        </Button>
       </div>
 
-      <div className={styles.filterGroup} ref={containerRef}>
-        <button
-          type="button"
-          className={styles.filterTrigger}
-          onClick={() => setFilterOpen((v) => !v)}
-          disabled={availableModels.length === 0}
-        >
-          <IconSlidersHorizontal size={14} />
-          <span>{filterLabel}</span>
-          <IconChevronDown size={12} />
-        </button>
-        {filterOpen ? (
-          <div className={styles.filterPanel}>
-            <div className={styles.filterToolbar}>
-              <button
-                type="button"
-                className={styles.filterToolbarBtn}
-                onClick={selectAll}
-                disabled={availableModels.length === 0}
-              >
-                {t('providersPage.toolbar.filter.selectAll')}
-              </button>
-              <button
-                type="button"
-                className={styles.filterToolbarBtn}
-                onClick={clearAll}
-                disabled={selectedModels.size === 0}
-              >
-                {t('providersPage.toolbar.filter.clear')}
-              </button>
-            </div>
-            {availableModels.length === 0 ? (
-              <div className={styles.filterEmpty}>
-                {t('providersPage.toolbar.filter.empty')}
-              </div>
-            ) : (
-              <ul className={styles.filterList}>
-                {availableModels.map((name) => (
-                  <li key={name} className={styles.filterItem}>
-                    <SelectionCheckbox
-                      checked={selectedModels.has(name)}
-                      onChange={() => toggleModel(name)}
-                      label={<span className={styles.filterItemLabel}>{name}</span>}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ) : null}
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={availableModels.length === 0}
+          >
+            <SlidersHorizontalIcon data-icon="inline-start" />
+            <span>{filterLabel}</span>
+            <ChevronDownIcon data-icon="inline-end" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className={styles.filterMenu}>
+          <DropdownMenuLabel className={styles.filterToolbar}>
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={selectAll}
+              disabled={availableModels.length === 0}
+            >
+              {t('providersPage.toolbar.filter.selectAll')}
+            </Button>
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={clearAll}
+              disabled={selectedModels.size === 0}
+            >
+              {t('providersPage.toolbar.filter.clear')}
+            </Button>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {availableModels.length === 0 ? (
+            <DropdownMenuLabel>{t('providersPage.toolbar.filter.empty')}</DropdownMenuLabel>
+          ) : (
+            <DropdownMenuGroup>
+              {availableModels.map((name) => (
+                <DropdownMenuCheckboxItem
+                  key={name}
+                  checked={selectedModels.has(name)}
+                  onCheckedChange={() => toggleModel(name)}
+                  onSelect={(event) => event.preventDefault()}
+                >
+                  <span className={styles.filterItemLabel}>{name}</span>
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuGroup>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  AlertCircleIcon,
+  CheckCircle2Icon,
+  InfoIcon,
+  TriangleAlertIcon,
+  XIcon,
+  type LucideIcon
+} from 'lucide-react';
 import { useNotificationStore } from '@/stores';
-import { IconX } from '@/components/ui/icons';
+import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import type { Notification } from '@/types';
 
 interface AnimatedNotification extends Notification {
@@ -9,6 +18,12 @@ interface AnimatedNotification extends Notification {
 }
 
 const ANIMATION_DURATION = 300; // ms
+const NOTIFICATION_ICON: Record<Notification['type'], LucideIcon> = {
+  info: InfoIcon,
+  success: CheckCircle2Icon,
+  warning: TriangleAlertIcon,
+  error: AlertCircleIcon
+};
 
 export function NotificationContainer() {
   const { t } = useTranslation();
@@ -60,22 +75,31 @@ export function NotificationContainer() {
 
   return (
     <div className="notification-container">
-      {animatedNotifications.map((notification) => (
-        <div
-          key={notification.id}
-          className={`notification ${notification.type} ${notification.isExiting ? 'exiting' : 'entering'}`}
-        >
-          <div className="message">{notification.message}</div>
-          <button
-            type="button"
-            className="close-btn"
-            onClick={() => handleClose(notification.id)}
-            aria-label={t('common.close')}
+      {animatedNotifications.map((notification) => {
+        const Icon = NOTIFICATION_ICON[notification.type];
+
+        return (
+          <Alert
+            key={notification.id}
+            variant={notification.type === 'error' ? 'destructive' : 'default'}
+            className={`notification ${notification.isExiting ? 'exiting' : 'entering'}`}
           >
-            <IconX size={16} />
-          </button>
-        </div>
-      ))}
+            <Icon data-icon="inline-start" />
+            <AlertDescription>{notification.message}</AlertDescription>
+            <AlertAction>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => handleClose(notification.id)}
+                aria-label={t('common.close')}
+              >
+                <XIcon data-icon="inline-start" />
+              </Button>
+            </AlertAction>
+          </Alert>
+        );
+      })}
     </div>
   );
 }

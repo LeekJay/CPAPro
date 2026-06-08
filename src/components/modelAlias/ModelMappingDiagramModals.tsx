@@ -1,12 +1,48 @@
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import type { TFunction } from 'i18next';
-import { Modal } from '@/components/ui/Modal';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
-import { IconTrash2 } from '@/components/ui/icons';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/shadcn-dialog';
+import { Switch } from '@/components/ui/switch';
+import { Trash2Icon } from 'lucide-react';
 import type { AliasNode, SourceNode } from './ModelMappingDiagramTypes';
 import styles from './ModelMappingDiagram.module.scss';
+
+interface DiagramDialogProps {
+  open: boolean;
+  title: string;
+  wide?: boolean;
+  onClose: () => void;
+  footer: ReactNode;
+  children: ReactNode;
+}
+
+function DiagramDialog({
+  open,
+  title,
+  wide,
+  onClose,
+  footer,
+  children,
+}: DiagramDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <DialogContent className={wide ? styles.diagramDialogWide : styles.diagramDialog}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        {children}
+        <DialogFooter>{footer}</DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 interface RenameAliasModalProps {
   open: boolean;
@@ -28,11 +64,10 @@ export function RenameAliasModal({
   onSubmit
 }: RenameAliasModalProps) {
   return (
-    <Modal
+    <DiagramDialog
       open={open}
-      onClose={onClose}
       title={t('oauth_model_alias.diagram_rename_alias_title')}
-      width={400}
+      onClose={onClose}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -53,7 +88,7 @@ export function RenameAliasModal({
         placeholder={t('oauth_model_alias.diagram_rename_placeholder')}
         autoFocus
       />
-    </Modal>
+    </DiagramDialog>
   );
 }
 
@@ -77,11 +112,10 @@ export function AddAliasModal({
   onSubmit
 }: AddAliasModalProps) {
   return (
-    <Modal
+    <DiagramDialog
       open={open}
-      onClose={onClose}
       title={t('oauth_model_alias.diagram_add_alias_title')}
-      width={400}
+      onClose={onClose}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -102,7 +136,7 @@ export function AddAliasModal({
         placeholder={t('oauth_model_alias.diagram_add_placeholder')}
         autoFocus
       />
-    </Modal>
+    </DiagramDialog>
   );
 }
 
@@ -126,11 +160,11 @@ export function SettingsAliasModal({
   onUnlink
 }: SettingsAliasModalProps) {
   return (
-    <Modal
+    <DiagramDialog
       open={open}
-      onClose={onClose}
       title={t('oauth_model_alias.diagram_settings_title', { alias: alias ?? '' })}
-      width={720}
+      wide
+      onClose={onClose}
       footer={
         <Button variant="secondary" onClick={onClose}>
           {t('common.close')}
@@ -159,14 +193,15 @@ export function SettingsAliasModal({
                       <span className={styles.settingsLabel}>
                         {t('oauth_model_alias.alias_fork_label')}
                       </span>
-                      <ToggleSwitch
+                      <Switch
+                        size="sm"
                         checked={forkEnabled}
-                        onChange={(value) => onToggleFork(source.provider, source.name, alias, value)}
-                        ariaLabel={t('oauth_model_alias.alias_fork_label')}
+                        onCheckedChange={(value) => onToggleFork(source.provider, source.name, alias, value)}
+                        aria-label={t('oauth_model_alias.alias_fork_label')}
                       />
-                      <button
-                        type="button"
-                        className={styles.settingsDelete}
+                      <Button
+                        variant="destructive"
+                        size="icon-sm"
                         onClick={() => onUnlink(source.provider, source.name, alias)}
                         aria-label={t('oauth_model_alias.diagram_delete_link', {
                           provider: source.provider,
@@ -177,8 +212,8 @@ export function SettingsAliasModal({
                           name: source.name
                         })}
                       >
-                        <IconTrash2 size={14} />
-                      </button>
+                        <Trash2Icon data-icon="inline-start" />
+                      </Button>
                     </div>
                   </div>
                 );
@@ -187,7 +222,7 @@ export function SettingsAliasModal({
           );
         })()
       ) : null}
-    </Modal>
+    </DiagramDialog>
   );
 }
 
@@ -209,11 +244,11 @@ export function SettingsSourceModal({
   onUnlink
 }: SettingsSourceModalProps) {
   return (
-    <Modal
+    <DiagramDialog
       open={open}
-      onClose={onClose}
       title={t('oauth_model_alias.diagram_settings_source_title')}
-      width={720}
+      wide
+      onClose={onClose}
       footer={
         <Button variant="secondary" onClick={onClose}>
           {t('common.close')}
@@ -236,14 +271,15 @@ export function SettingsSourceModal({
                   <span className={styles.settingsLabel}>
                     {t('oauth_model_alias.alias_fork_label')}
                   </span>
-                  <ToggleSwitch
+                  <Switch
+                    size="sm"
                     checked={entry.fork === true}
-                    onChange={(value) => onToggleFork(source.provider, source.name, entry.alias, value)}
-                    ariaLabel={t('oauth_model_alias.alias_fork_label')}
+                    onCheckedChange={(value) => onToggleFork(source.provider, source.name, entry.alias, value)}
+                    aria-label={t('oauth_model_alias.alias_fork_label')}
                   />
-                  <button
-                    type="button"
-                    className={styles.settingsDelete}
+                  <Button
+                    variant="destructive"
+                    size="icon-sm"
                     onClick={() => onUnlink(source.provider, source.name, entry.alias)}
                     aria-label={t('oauth_model_alias.diagram_delete_link', {
                       provider: source.provider,
@@ -254,14 +290,14 @@ export function SettingsSourceModal({
                       name: source.name
                     })}
                   >
-                    <IconTrash2 size={14} />
-                  </button>
+                    <Trash2Icon data-icon="inline-start" />
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         )
       ) : null}
-    </Modal>
+    </DiagramDialog>
   );
 }

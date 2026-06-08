@@ -5,372 +5,310 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 12px;
   min-height: 0;
-
-  @include mobile {
-    min-height: auto;
-    overflow: visible;
-  }
 }
 
 .pageHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-md;
-  margin: 0 0 $spacing-lg 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+}
 
-  @include mobile {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: $spacing-xs;
-  }
+.titleBlock {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .pageTitle {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
   margin: 0;
+  color: var(--foreground);
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.15;
 }
 
-.tabBar {
-  display: flex;
-  gap: $spacing-xs;
-  margin-bottom: $spacing-lg;
-  border-bottom: 1px solid var(--border-color);
+.runtimeBadge {
+  max-width: 100%;
 }
 
-.tabItem {
-  @include button-reset;
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: transparent;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    border-color 0.15s ease;
-
-  &:hover {
-    color: var(--text-primary);
-  }
-
-  &:focus,
-  &:focus-visible {
-    outline: none;
-    box-shadow: none;
-  }
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(104px, 1fr));
+  gap: 8px;
+  min-width: 360px;
 }
 
-.tabActive {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-}
-
-.content {
+.metricCard {
   display: flex;
   flex-direction: column;
-  gap: $spacing-lg;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.metricValue {
+  color: var(--foreground);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.metricLabel {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tabs {
   flex: 1;
   min-height: 0;
-
-  @include mobile {
-    gap: $spacing-md;
-    min-height: auto;
-  }
 }
 
-.logCard {
+.tabsList {
+  margin-bottom: 6px;
+}
+
+.tabContent {
   display: flex;
-  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.workbenchCard {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-
-  @include mobile {
-    flex: 0 0 auto;
-    min-height: auto;
-    overflow: visible;
-  }
+  border-color: var(--border);
+  gap: 0;
 }
 
-.runtimeNotice {
-  flex: 0 0 auto;
-  padding: 4px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-full;
-  color: var(--text-secondary);
-  background: var(--bg-secondary);
-  font-size: 12px;
-  line-height: 1.3;
+.cardHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  padding-top: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
-.toolbar {
+.cardTitleBlock {
+  min-width: 0;
   display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  flex-wrap: wrap;
-  margin-left: auto;
-
-  @include mobile {
-    align-items: flex-start;
-    margin-left: 0;
-    width: 100%;
-  }
-}
-
-.filters {
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-  flex-wrap: wrap;
-  margin-bottom: $spacing-md;
-
-  :global(.form-group) {
-    margin: 0;
-  }
-
-  @include mobile {
-    gap: $spacing-sm;
-    margin-bottom: $spacing-sm;
-  }
-}
-
-.searchWrapper {
-  flex: 1;
-  min-width: 220px;
-  max-width: 420px;
-}
-
-.filterPanelHeader {
-  display: flex;
-  align-items: center;
-  flex: 1 1 100%;
-}
-
-.filterPanelToggle {
-  white-space: nowrap;
-}
-
-.filterPanelButtonContent {
-  display: inline-flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
 }
 
-.filterPanelCount {
-  display: inline-flex;
+.cardActions {
+  display: flex;
+  justify-content: flex-end;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: $radius-full;
-  background: rgba($primary-color, 0.12);
-  color: var(--primary-color);
-  font-size: 12px;
-  line-height: 1.2;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cardContent {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.alertStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filterSurface {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+}
+
+.filterTopRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.searchWrapper {
+  flex: 1 1 320px;
+  min-width: 240px;
+  max-width: 560px;
+}
+
+.searchInput {
+  font-family: inherit;
+}
+
+.searchIcon {
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.filterPanelToggle {
+  min-width: fit-content;
 }
 
 .structuredFilters {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 1 1 100%;
-  padding: 8px 10px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  max-height: 112px;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .filterChipGroup {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
 }
 
 .filterChipLabel {
+  color: var(--muted-foreground);
   font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 700;
-  line-height: 28px;
-  min-width: 68px;
+  font-weight: 600;
+  line-height: 24px;
 }
 
 .filterChipList {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  flex: 1;
 }
 
 .filterChip {
-  @include button-reset;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: $radius-full;
-  border: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.3;
-  cursor: pointer;
-  max-width: 280px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background-color 0.15s ease;
-
-  &:hover:not(:disabled) {
-    color: var(--text-primary);
-    border-color: var(--primary-color);
-  }
-
-  &:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
+  max-width: 100%;
 }
 
-.filterChipActive {
-  color: var(--primary-color);
-  border-color: rgba($primary-color, 0.45);
-  background: rgba($primary-color, 0.14);
+.pathFilterChip {
+  max-width: 360px;
+}
+
+.filterChipText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .filterChipHint {
+  color: var(--muted-foreground);
   font-size: 12px;
-  color: var(--text-tertiary);
+  line-height: 26px;
 }
 
-@include mobile {
-  .filterPanelHeader {
-    width: 100%;
-  }
-
-  .filterPanelToggle {
-    width: 100%;
-  }
-
-  .filterPanelButtonContent {
-    width: 100%;
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
-
-  .filterChipGroup {
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .filterChipLabel {
-    min-width: 0;
-    line-height: 1.2;
-  }
+.filterFooter {
+  display: flex;
+  justify-content: flex-end;
 }
 
-.searchInput {
-  padding-right: 44px !important;
+.switchGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
 }
 
-.searchIcon {
-  color: var(--text-tertiary);
-  pointer-events: none;
-}
-
-.searchClear {
-  @include button-reset;
+.switchRow,
+.inlineSwitch {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: $radius-full;
-  color: var(--text-secondary);
-
-  &:hover {
-    background: var(--bg-secondary);
-  }
-}
-
-.filterStats {
-  margin-left: auto;
-  display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 10px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
 }
 
-.removedCount {
-  color: var(--text-tertiary);
+.switchRow {
+  padding: 7px 10px;
 }
 
-.actionButton {
-  white-space: nowrap;
+.inlineSwitch {
+  height: 28px;
+  padding: 0 9px;
 }
 
-.buttonContent {
+.switchRow label,
+.inlineSwitch label {
   display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 6px;
-
-  svg {
-    flex: 0 0 auto;
-  }
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.25;
+  cursor: pointer;
 }
 
-.switchLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.switchRow svg,
+.inlineSwitch svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
 
-  svg {
-    flex: 0 0 auto;
-  }
+.skeletonStack,
+.skeletonTable {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeletonLine {
+  height: 32px;
+}
+
+.skeletonPanel {
+  height: 260px;
+}
+
+.emptyState {
+  min-height: 160px;
+  border: 1px dashed var(--border);
+  background: var(--background);
 }
 
 .logPanel {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
   flex: 1 1 auto;
-  min-height: 280px;
-  max-height: calc(100vh - 320px);
-  height: auto;
+  min-height: 240px;
+  max-height: calc(100vh - 400px);
   overflow: auto;
   resize: vertical;
   position: relative;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  overscroll-behavior: contain;
-
-  @include tablet {
-    min-height: 240px;
-    max-height: calc(100vh - 300px);
-  }
-
-  @include mobile {
-    min-height: 360px;
-    height: 420px;
-    max-height: 480px;
-    flex: 0 0 auto;
-  }
-}
-
-.errorPanel {
-  height: 480px;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
 
@@ -381,44 +319,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-sm;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  color: var(--text-secondary);
+  gap: 10px;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
   font-size: 12px;
-
-  @include mobile {
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: $spacing-xs;
-
-    > span {
-      width: 100%;
-    }
-  }
-}
-
-.loadMoreCount {
-  color: var(--text-tertiary);
-  white-space: nowrap;
 }
 
 .loadMoreStats {
   display: flex;
   align-items: center;
-  gap: $spacing-md;
-
-  @include mobile {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: $spacing-sm;
-
-    > span {
-      white-space: nowrap;
-    }
-  }
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .logList {
@@ -428,59 +342,35 @@
 
 .rawLog {
   margin: 0;
-  padding: 10px 12px;
+  padding: 12px;
   cursor: text;
   user-select: text;
   white-space: pre;
-  color: var(--text-primary);
+  color: var(--foreground);
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
   font-size: 12.5px;
-  line-height: 1.45;
-
-  @include tablet {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-
-  @include mobile {
-    padding: 8px 10px;
-    font-size: 11.5px;
-  }
+  line-height: 1.5;
 }
 
 .logRow {
   display: grid;
-  grid-template-columns: 170px 1fr;
-  gap: $spacing-md;
+  grid-template-columns: 176px minmax(0, 1fr);
+  gap: 12px;
   padding: 10px 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
   border-left: 3px solid transparent;
   cursor: copy;
+  color: var(--foreground);
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
   font-size: 12.5px;
   line-height: 1.45;
-  color: var(--text-primary);
 
   &:hover {
-    background: rgba($primary-color, 0.06);
-  }
-
-  @include tablet {
-    grid-template-columns: 140px 1fr;
-    gap: $spacing-sm;
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-
-  @include mobile {
-    grid-template-columns: 1fr;
-    gap: $spacing-xs;
-    padding: 8px 10px;
-    font-size: 11.5px;
+    background: var(--muted);
   }
 }
 
@@ -489,70 +379,44 @@
 }
 
 .rowError {
-  border-left-color: var(--error-color);
+  border-left-color: var(--destructive);
 }
 
 .timestamp {
-  color: var(--text-tertiary);
+  color: var(--muted-foreground);
   white-space: nowrap;
-  padding-top: 2px;
-
-  @include mobile {
-    white-space: normal;
-  }
+  padding-top: 1px;
+  font-variant-numeric: tabular-nums;
 }
 
 .rowMain {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px;
   min-width: 0;
-}
-
-.badge {
-  display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: $radius-full;
-  font-size: 12px;
-  font-weight: 800;
-  border: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  white-space: nowrap;
+  gap: 6px;
 }
 
-.pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: $radius-full;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  white-space: nowrap;
+.logBadge,
+.statusBadge,
+.requestIdBadge,
+.methodBadge,
+.sourceBadge {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
 }
 
-.source {
-  color: var(--text-secondary);
-  max-width: 240px;
-  @include text-ellipsis;
-
-  @include mobile {
-    max-width: 100%;
-  }
+.sourceBadge {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .requestIdBadge {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
-  font-size: 11px;
-  color: #0891b2;
-  background: rgba(8, 145, 178, 0.1);
-  border-color: rgba(8, 145, 178, 0.25);
+  color: var(--info-color);
+  background: color-mix(in oklch, var(--info-color) 12%, transparent);
+  border-color: color-mix(in oklch, var(--info-color) 32%, transparent);
 }
 
 .statusBadge {
@@ -565,191 +429,216 @@
   border-color: var(--success-badge-border);
 }
 
-.statusInfo {
-  color: var(--info-color);
-  background: rgba($primary-color, 0.12);
-  border-color: rgba($primary-color, 0.25);
-}
-
-.statusWarn {
-  color: var(--warning-text);
-  background: var(--warning-bg);
-  border-color: var(--warning-border);
-}
-
-.statusError {
-  color: var(--failure-badge-text);
-  background: var(--failure-badge-bg);
-  border-color: var(--failure-badge-border);
-}
-
+.statusInfo,
 .levelInfo {
   color: var(--info-color);
-  background: rgba($primary-color, 0.12);
-  border-color: rgba($primary-color, 0.25);
+  background: color-mix(in oklch, var(--info-color) 12%, transparent);
+  border-color: color-mix(in oklch, var(--info-color) 28%, transparent);
 }
 
+.statusWarn,
 .levelWarn {
   color: var(--warning-text);
   background: var(--warning-bg);
   border-color: var(--warning-border);
 }
 
+.statusError,
 .levelError {
-  color: var(--error-color);
-  background: rgba($error-color, 0.12);
-  border-color: rgba($error-color, 0.25);
+  color: var(--destructive);
+  background: color-mix(in oklch, var(--destructive) 14%, transparent);
+  border-color: color-mix(in oklch, var(--destructive) 34%, transparent);
 }
 
-.levelDebug,
-.levelTrace {
-  color: var(--text-secondary);
-  background: rgba(107, 114, 128, 0.12);
-  border-color: rgba(107, 114, 128, 0.25);
+.levelDebug {
+  color: var(--muted-foreground);
+  background: var(--muted);
+  border-color: var(--border);
 }
 
 .methodBadge {
-  color: var(--text-primary);
-  background: rgba($primary-color, 0.08);
-  border-color: rgba($primary-color, 0.22);
+  color: var(--foreground);
 }
 
 .path {
-  color: var(--text-primary);
-  font-weight: 700;
   max-width: 520px;
-  @include text-ellipsis;
-
-  @include mobile {
-    max-width: 100%;
-    flex-basis: 100%;
-  }
+  min-width: 0;
+  color: var(--foreground);
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .message {
-  color: var(--text-secondary);
+  min-width: 0;
+  color: var(--muted-foreground);
   word-break: break-word;
+}
 
-  @include mobile {
+.errorPanel {
+  min-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.errorLogTable {
+  min-width: 720px;
+}
+
+.tableActionHead,
+.tableActionCell {
+  text-align: right;
+}
+
+.errorLogNameCell {
+  display: flex;
+  min-width: 280px;
+  max-width: 460px;
+  align-items: center;
+  gap: 8px;
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.fileIcon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: var(--muted-foreground);
+}
+
+.spinIcon {
+  animation: logs-spin 0.8s linear infinite;
+}
+
+@keyframes logs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@include tablet {
+  .pageHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .metricsGrid {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cardHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .cardActions {
+    justify-content: flex-start;
+  }
+
+  .logPanel {
+    max-height: calc(100vh - 470px);
+  }
+}
+
+@include mobile {
+  .container {
+    min-height: auto;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+  }
+
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tabsList {
+    width: 100%;
+  }
+
+  .filterTopRow,
+  .cardActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .searchWrapper,
+  .filterPanelToggle,
+  .cardActions > button,
+  .inlineSwitch {
+    width: 100%;
+    max-width: none;
+  }
+
+  .filterChipGroup {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .logPanel {
+    min-height: 360px;
+    max-height: 480px;
+    resize: none;
+  }
+
+  .loadMoreBanner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .loadMoreStats {
+    justify-content: flex-start;
+  }
+
+  .logRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 9px 10px;
+    font-size: 11.5px;
+  }
+
+  .timestamp {
+    white-space: normal;
+  }
+
+  .path,
+  .message {
     flex-basis: 100%;
   }
 }
 
-@media (max-height: 960px) {
-  @media (min-width: 769px) {
-    .logPanel {
-      min-height: 160px;
-      max-height: calc(100vh - 300px);
-    }
+@media (max-height: 820px) and (min-width: 769px) {
+  .container {
+    gap: 12px;
   }
-}
 
-@media (max-height: 820px) {
   .pageTitle {
-    font-size: 24px;
+    font-size: 22px;
   }
 
-  .pageHeader {
-    margin-bottom: $spacing-md;
+  .metricCard {
+    padding: 7px 9px;
   }
 
-  .tabBar {
-    margin-bottom: $spacing-md;
+  .filterSurface {
+    max-height: 260px;
+    overflow: auto;
+    overscroll-behavior: contain;
   }
 
-  .tabItem {
-    padding: 10px 16px;
-  }
-
-  .content {
-    gap: $spacing-md;
-  }
-
-  @media (min-width: 769px) {
-    .filters {
-      flex: 0 0 auto;
-      gap: $spacing-sm;
-      margin-bottom: $spacing-sm;
-      max-height: 260px;
-      overflow: auto;
-      padding-right: 4px;
-      overscroll-behavior: contain;
-    }
-
-    .logPanel {
-      min-height: 0;
-      max-height: calc(100vh - 280px);
-    }
-  }
-
-  .logCard {
-    padding: $spacing-md;
-  }
-
-  .logRow {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-
-  .errorPanel {
-    height: 360px;
-  }
-}
-
-@media (max-height: 600px) {
-  .pageTitle {
-    font-size: 20px;
-  }
-
-  .pageHeader {
-    margin-bottom: $spacing-sm;
-  }
-
-  .tabBar {
-    margin-bottom: $spacing-sm;
-  }
-
-  .tabItem {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-
-  .content {
-    gap: $spacing-sm;
-  }
-
-  .filters {
-    margin-bottom: $spacing-sm;
-    gap: $spacing-sm;
-  }
-
-  @media (min-width: 769px) {
-    .filters {
-      max-height: 180px;
-    }
-
-    .logPanel {
-      min-height: 0;
-      max-height: calc(100vh - 220px);
-    }
-  }
-
-  .logCard {
-    padding: $spacing-sm;
-  }
-
-  .logRow {
-    padding: 6px 8px;
-    font-size: 11px;
-    grid-template-columns: 130px 1fr;
-    gap: $spacing-xs;
-  }
-
-  .loadMoreBanner {
-    padding: 6px 10px;
-  }
-
-  .errorPanel {
-    height: 280px;
+  .logPanel {
+    min-height: 180px;
+    max-height: calc(100vh - 360px);
   }
 }
