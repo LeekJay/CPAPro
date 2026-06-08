@@ -171,6 +171,9 @@ bun run type-check # tsc --noEmit
 - UI 改动截图
 - 验证记录（`bun run lint`、`bun run type-check`、`bun run build`）
 
+## 致谢
+- [Linux.do](https://linux.do)
+
 ## 许可证
 
 AGPL-3.0

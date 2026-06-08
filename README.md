@@ -171,6 +171,9 @@ Issues and PRs are welcome. Please include:
 - Screenshots for UI changes
 - Verification notes (`bun run lint`, `bun run type-check`, `bun run build`)
 
+## Thanks
+- [Linux.do](https://linux.do)
+
 ## License
 
 AGPL-3.0
