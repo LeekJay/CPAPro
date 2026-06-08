@@ -1,13 +1,30 @@
-# CPAPro
+<div align="center">
+  <h1>CPAPro</h1>
+  <p><strong>CPAPro, a modern CLIProxyAPI panel.</strong></p>
+  <p>
+    <a href="https://cpap-ui.cuz-lab.tech/management.html"><strong>Live Demo</strong></a>
+    ·
+    <a href="README_CN.md">中文文档</a>
+    ·
+    <a href="https://github.com/router-for-me/CLIProxyAPI">CLIProxyAPI</a>
+    ·
+    <a href="https://github.com/CuzTeam/CPAPro/releases">Releases</a>
+  </p>
+  <p>
+    <img alt="Release" src="https://img.shields.io/github/v/release/CuzTeam/CPAPro?style=flat-square" />
+    <img alt="License" src="https://img.shields.io/github/license/CuzTeam/CPAPro?style=flat-square" />
+    <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?style=flat-square" />
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6.0-3178c6?style=flat-square" />
+    <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square" />
+  </p>
+</div>
 
-CPAPro, a modern CLIProxyAPI panel.
+---
 
-A single-file Web UI (React + TypeScript) for operating and troubleshooting the **CLI Proxy API** via its **Management API** (config, credentials, and logs).
+CPAPro is a single-file Web UI (React + TypeScript) for operating and troubleshooting **CLI Proxy API** through its **Management API**: configuration, credentials, quotas, logs, and system diagnostics.
 
-[中文文档](README_CN.md)
-
+**Live Demo**: https://cpap-ui.cuz-lab.tech/management.html  
 **Main Project**: https://github.com/router-for-me/CLIProxyAPI  
-**Example URL**: https://remote.router-for.me/  
 **Minimum Required Version**: ≥ 7.1.0 (recommended latest)
 
 Since version 6.0.19, the Web UI ships with the main program; access it via `/management.html` on the API port once the service is running.

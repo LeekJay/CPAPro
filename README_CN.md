@@ -1,13 +1,30 @@
-# CPAPro
+<div align="center">
+  <h1>CPAPro</h1>
+  <p><strong>CPAPro, a modern CLIProxyAPI panel.</strong></p>
+  <p>
+    <a href="https://cpap-ui.cuz-lab.tech/management.html"><strong>体验站</strong></a>
+    ·
+    <a href="README.md">English</a>
+    ·
+    <a href="https://github.com/router-for-me/CLIProxyAPI">CLIProxyAPI</a>
+    ·
+    <a href="https://github.com/CuzTeam/CPAPro/releases">Releases</a>
+  </p>
+  <p>
+    <img alt="Release" src="https://img.shields.io/github/v/release/CuzTeam/CPAPro?style=flat-square" />
+    <img alt="License" src="https://img.shields.io/github/license/CuzTeam/CPAPro?style=flat-square" />
+    <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?style=flat-square" />
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6.0-3178c6?style=flat-square" />
+    <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square" />
+  </p>
+</div>
 
-CPAPro, a modern CLIProxyAPI panel.
+---
 
-用于管理与故障排查 **CLI Proxy API** 的单文件 Web UI（React + TypeScript），通过 **Management API** 完成配置、凭据与日志等管理操作。
+CPAPro 是用于管理与故障排查 **CLI Proxy API** 的单文件 Web UI（React + TypeScript），通过 **Management API** 完成配置、凭据、配额、日志与系统诊断等管理操作。
 
-[English](README.md)
-
+**体验站**: https://cpap-ui.cuz-lab.tech/management.html  
 **主项目**: https://github.com/router-for-me/CLIProxyAPI  
-**示例地址**: https://remote.router-for.me/  
 **最低版本要求**: ≥ 7.1.0（推荐最新）
 
 从6.0.19版本开始，Web UI 随主程序一起提供；服务运行后，通过 API 端口上的"/management.html"访问它。
