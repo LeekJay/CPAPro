@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import {
   BookOpenIcon,
   CheckCircle2Icon,
@@ -36,6 +37,15 @@ import {
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   useAuthStore,
   useConfigStore,
@@ -75,8 +85,16 @@ const compareVersions = (latest?: string | null, current?: string | null) => {
   return 0;
 };
 
+const SYSTEM_PAGE_TABS = ['overview', 'models', 'links'] as const;
+type SystemPageTab = (typeof SYSTEM_PAGE_TABS)[number];
+
+function isSystemPageTab(value: string | null): value is SystemPageTab {
+  return Boolean(value && SYSTEM_PAGE_TABS.includes(value as SystemPageTab));
+}
+
 export function SystemPage() {
   const { t, i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { showNotification, showConfirmation } = useNotificationStore();
   const auth = useAuthStore();
   const config = useConfigStore((state) => state.config);
@@ -109,6 +127,19 @@ export function SystemPage() {
     [i18n.language]
   );
   const groupedModels = useMemo(() => classifyModels(models, { otherLabel }), [models, otherLabel]);
+  const modelRows = useMemo(
+    () =>
+      groupedModels.flatMap((group) =>
+        group.items.map((model) => ({
+          ...model,
+          providerId: group.id,
+          providerLabel: group.label,
+        }))
+      ),
+    [groupedModels]
+  );
+  const pageTabParam = searchParams.get('tab');
+  const activePageTab: SystemPageTab = isSystemPageTab(pageTabParam) ? pageTabParam : 'overview';
   const requestLogEnabled = config?.requestLog ?? false;
   const requestLogDirty = requestLogDraft !== requestLogEnabled;
   const canEditRequestLog = auth.connectionStatus === 'connected' && Boolean(config);
@@ -361,232 +392,288 @@ export function SystemPage() {
           : t('common.info');
 
   const renderModelsSkeleton = () => (
-    <div className={styles.modelList}>
+    <div className={styles.modelsTable}>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('system_info.models_column_provider')}</TableHead>
+            <TableHead>{t('system_info.models_column_model')}</TableHead>
+            <TableHead>{t('system_info.models_column_alias')}</TableHead>
+            <TableHead>{t('system_info.models_column_description')}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
       {Array.from({ length: 4 }, (_, index) => (
-        <div key={index} className={styles.modelSkeletonRow}>
-          <div className={styles.modelSkeletonText}>
-            <Skeleton className={styles.modelSkeletonTitle} />
-            <Skeleton className={styles.modelSkeletonSubtitle} />
-          </div>
-          <Skeleton className={styles.modelSkeletonTags} />
-        </div>
+        <TableRow key={index}>
+          <TableCell><Skeleton className={styles.modelSkeletonTitle} /></TableCell>
+          <TableCell><Skeleton className={styles.modelSkeletonWide} /></TableCell>
+          <TableCell><Skeleton className={styles.modelSkeletonSubtitle} /></TableCell>
+          <TableCell><Skeleton className={styles.modelSkeletonTags} /></TableCell>
+        </TableRow>
       ))}
+        </TableBody>
+      </Table>
     </div>
+  );
+
+  const handlePageTabChange = useCallback(
+    (value: string) => {
+      if (!isSystemPageTab(value)) return;
+
+      const nextParams = new URLSearchParams(searchParams);
+      if (value === 'overview') {
+        nextParams.delete('tab');
+      } else {
+        nextParams.set('tab', value);
+      }
+      setSearchParams(nextParams, { replace: true });
+    },
+    [searchParams, setSearchParams]
   );
 
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>{t('system_info.title')}</h1>
-      <div className={styles.content}>
-        <Card className={styles.aboutCard}>
-          <CardContent className={styles.aboutContent}>
-          <div className={styles.aboutHeader}>
-            <img src={INLINE_LOGO_JPEG} alt="CPAPro" className={styles.aboutLogo} />
-            <div className={styles.aboutTitle}>{t('system_info.about_title')}</div>
-          </div>
+      <Tabs value={activePageTab} onValueChange={handlePageTabChange} className={styles.pageTabs}>
+        <TabsList variant="line" className={styles.pageTabsList}>
+          <TabsTrigger value="overview">{t('system_info.tab_overview')}</TabsTrigger>
+          <TabsTrigger value="models">{t('system_info.tab_models')}</TabsTrigger>
+          <TabsTrigger value="links">{t('system_info.tab_links')}</TabsTrigger>
+        </TabsList>
 
-          <div className={styles.aboutInfoGrid}>
-            <button
-              type="button"
-              className={`${styles.infoTile} ${styles.tapTile}`}
-              onClick={handleInfoVersionTap}
-            >
-              <div className={styles.tileHeader}>
-                <div className={styles.tileLabel}>{t('footer.version')}</div>
-              </div>
-              <div className={styles.tileValue}>{appVersion}</div>
-            </button>
-
-            <div className={styles.infoTile}>
-              <div className={styles.tileHeader}>
-                <div className={styles.tileLabel}>{t('footer.api_version')}</div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={styles.tileAction}
-                  onClick={() => void handleVersionCheck()}
-                  loading={checkingVersion}
-                  title={t('system_info.version_check_button')}
-                  aria-label={t('system_info.version_check_button')}
-                >
-                  {t('system_info.version_check_button')}
-                </Button>
-              </div>
-              <div className={styles.tileValue}>{apiVersion}</div>
-            </div>
-
-            <div className={styles.infoTile}>
-              <div className={styles.tileLabel}>{t('footer.build_date')}</div>
-              <div className={styles.tileValue}>{buildTime}</div>
-            </div>
-
-            <div className={styles.infoTile}>
-              <div className={styles.tileLabel}>{t('connection.status')}</div>
-              <div className={styles.tileValue}>{t(`common.${auth.connectionStatus}_status`)}</div>
-              <div className={styles.tileSub}>{auth.apiBase || '-'}</div>
-            </div>
-          </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('system_info.quick_links_title')}</CardTitle>
-            <CardDescription>{t('system_info.quick_links_desc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-          <div className={styles.quickLinks}>
-            <a
-              href="https://github.com/router-for-me/CLIProxyAPI"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.linkCard}
-            >
-              <div className={`${styles.linkIcon} ${styles.github}`}>
-                <CodeIcon />
-              </div>
-              <div className={styles.linkContent}>
-                <div className={styles.linkTitle}>
-                  {t('system_info.link_main_repo')}
-                  <ExternalLinkIcon />
+        <TabsContent value="overview" className={styles.pageTabContent}>
+          <div className={styles.content}>
+            <Card className={styles.aboutCard}>
+              <CardContent className={styles.aboutContent}>
+                <div className={styles.aboutHeader}>
+                  <img src={INLINE_LOGO_JPEG} alt="CPAPro" className={styles.aboutLogo} />
+                  <div className={styles.aboutTitle}>{t('system_info.about_title')}</div>
                 </div>
-                <div className={styles.linkDesc}>{t('system_info.link_main_repo_desc')}</div>
-              </div>
-            </a>
 
-            <a
-              href="https://github.com/CuzTeam/CPAPro"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.linkCard}
-            >
-              <div className={`${styles.linkIcon} ${styles.github}`}>
-                <CodeIcon />
-              </div>
-              <div className={styles.linkContent}>
-                <div className={styles.linkTitle}>
-                  {t('system_info.link_webui_repo')}
-                  <ExternalLinkIcon />
-                </div>
-                <div className={styles.linkDesc}>{t('system_info.link_webui_repo_desc')}</div>
-              </div>
-            </a>
-
-            <a
-              href="https://help.router-for.me/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.linkCard}
-            >
-              <div className={`${styles.linkIcon} ${styles.docs}`}>
-                <BookOpenIcon />
-              </div>
-              <div className={styles.linkContent}>
-                <div className={styles.linkTitle}>
-                  {t('system_info.link_docs')}
-                  <ExternalLinkIcon />
-                </div>
-                <div className={styles.linkDesc}>{t('system_info.link_docs_desc')}</div>
-              </div>
-            </a>
-          </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className={styles.cardHeaderRow}>
-            <div>
-              <CardTitle>{t('system_info.models_title')}</CardTitle>
-              <CardDescription>{t('system_info.models_desc')}</CardDescription>
-            </div>
-            <CardAction>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => fetchModels({ forceRefresh: true })}
-              loading={modelsLoading}
-            >
-              {t('common.refresh')}
-            </Button>
-            </CardAction>
-          </CardHeader>
-          <CardContent className={styles.modelsContent}>
-          {modelStatus && modelStatus.type !== 'error' && (
-            <div className={styles.statusLine}>
-              <Badge variant={modelStatus.type === 'warning' ? 'secondary' : 'outline'}>
-                {modelStatus.type === 'success' ? (
-                  <CheckCircle2Icon data-icon="inline-start" />
-                ) : modelStatus.type === 'warning' ? (
-                  <TriangleAlertIcon data-icon="inline-start" />
-                ) : (
-                  <InfoIcon data-icon="inline-start" />
-                )}
-                {modelStatusTitle}
-              </Badge>
-              <span>{modelStatus.message}</span>
-            </div>
-          )}
-          {modelsLoading ? (
-            renderModelsSkeleton()
-          ) : models.length === 0 ? (
-            <Empty className={styles.emptyState}>
-              <EmptyHeader>
-                <EmptyTitle>{t('system_info.models_empty')}</EmptyTitle>
-                <EmptyDescription>{t('system_info.models_desc')}</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <div className={styles.modelsList}>
-              {groupedModels.map((group) => (
-                <div key={group.id} className={styles.modelGroupRow}>
-                  <div className={styles.modelGroupMeta}>
-                    <div className={styles.groupTitle}>
-                      <LobeProviderIcon
-                        provider={group.id}
-                        size={18}
-                        className={styles.groupIcon}
-                        fallbackLabel={group.label}
-                      />
-                      <span className={styles.modelGroupTitle}>{group.label}</span>
+                <div className={styles.aboutInfoGrid}>
+                  <button
+                    type="button"
+                    className={`${styles.infoTile} ${styles.tapTile}`}
+                    onClick={handleInfoVersionTap}
+                  >
+                    <div className={styles.tileHeader}>
+                      <div className={styles.tileLabel}>{t('footer.version')}</div>
                     </div>
-                    <div className={styles.modelGroupSubtitle}>
-                      {t('system_info.models_count', { count: group.items.length })}
-                    </div>
-                  </div>
-                  <div className={styles.modelTags}>
-                    {group.items.map((model) => (
-                      <span
-                        key={`${model.name}-${model.alias ?? 'default'}`}
-                        className={styles.modelTag}
-                        title={model.description || ''}
+                    <div className={styles.tileValue}>{appVersion}</div>
+                  </button>
+
+                  <div className={styles.infoTile}>
+                    <div className={styles.tileHeader}>
+                      <div className={styles.tileLabel}>{t('footer.api_version')}</div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className={styles.tileAction}
+                        onClick={() => void handleVersionCheck()}
+                        loading={checkingVersion}
+                        title={t('system_info.version_check_button')}
+                        aria-label={t('system_info.version_check_button')}
                       >
-                        <span className={styles.modelName}>{model.name}</span>
-                        {model.alias && <span className={styles.modelAlias}>{model.alias}</span>}
-                      </span>
-                    ))}
+                        {t('system_info.version_check_button')}
+                      </Button>
+                    </div>
+                    <div className={styles.tileValue}>{apiVersion}</div>
+                  </div>
+
+                  <div className={styles.infoTile}>
+                    <div className={styles.tileLabel}>{t('footer.build_date')}</div>
+                    <div className={styles.tileValue}>{buildTime}</div>
+                  </div>
+
+                  <div className={styles.infoTile}>
+                    <div className={styles.tileLabel}>{t('connection.status')}</div>
+                    <div className={styles.tileValue}>{t(`common.${auth.connectionStatus}_status`)}</div>
+                    <div className={styles.tileSub}>{auth.apiBase || '-'}</div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('system_info.clear_login_title')}</CardTitle>
-            <CardDescription>{t('system_info.clear_login_desc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-          <div className={styles.clearLoginActions}>
-            <Button variant="danger" onClick={handleClearLoginStorage}>
-              {t('system_info.clear_login_button')}
-            </Button>
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('system_info.clear_login_title')}</CardTitle>
+                <CardDescription>{t('system_info.clear_login_desc')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className={styles.clearLoginActions}>
+                  <Button variant="danger" onClick={handleClearLoginStorage}>
+                    {t('system_info.clear_login_button')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          </CardContent>
-        </Card>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="models" className={styles.pageTabContent}>
+          <Card>
+            <CardHeader className={styles.cardHeaderRow}>
+              <div>
+                <CardTitle>{t('system_info.models_title')}</CardTitle>
+                <CardDescription>{t('system_info.models_desc')}</CardDescription>
+              </div>
+              <CardAction>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => fetchModels({ forceRefresh: true })}
+                  loading={modelsLoading}
+                >
+                  {t('common.refresh')}
+                </Button>
+              </CardAction>
+            </CardHeader>
+            <CardContent className={styles.modelsContent}>
+              {modelStatus && modelStatus.type !== 'error' && (
+                <div className={styles.statusLine}>
+                  <Badge variant={modelStatus.type === 'warning' ? 'secondary' : 'outline'}>
+                    {modelStatus.type === 'success' ? (
+                      <CheckCircle2Icon data-icon="inline-start" />
+                    ) : modelStatus.type === 'warning' ? (
+                      <TriangleAlertIcon data-icon="inline-start" />
+                    ) : (
+                      <InfoIcon data-icon="inline-start" />
+                    )}
+                    {modelStatusTitle}
+                  </Badge>
+                  <span>{modelStatus.message}</span>
+                </div>
+              )}
+              {modelsLoading ? (
+                renderModelsSkeleton()
+              ) : (
+                <div className={styles.modelsTable}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('system_info.models_column_provider')}</TableHead>
+                        <TableHead>{t('system_info.models_column_model')}</TableHead>
+                        <TableHead>{t('system_info.models_column_alias')}</TableHead>
+                        <TableHead>{t('system_info.models_column_description')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {modelRows.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4}>
+                            <Empty className={styles.tableEmptyState}>
+                              <EmptyHeader>
+                                <EmptyTitle>{t('system_info.models_empty')}</EmptyTitle>
+                                <EmptyDescription>{t('system_info.models_desc')}</EmptyDescription>
+                              </EmptyHeader>
+                            </Empty>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        modelRows.map((model) => (
+                          <TableRow key={`${model.providerId}-${model.name}-${model.alias ?? 'default'}`}>
+                            <TableCell>
+                              <div className={styles.providerCell}>
+                                <LobeProviderIcon
+                                  provider={model.providerId}
+                                  size={18}
+                                  className={styles.groupIcon}
+                                  fallbackLabel={model.providerLabel}
+                                />
+                                <span>{model.providerLabel}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className={styles.modelName}>{model.name}</span>
+                            </TableCell>
+                            <TableCell>
+                              {model.alias ? (
+                                <Badge variant="secondary">{model.alias}</Badge>
+                              ) : (
+                                <span className={styles.mutedCell}>-</span>
+                              )}
+                            </TableCell>
+                            <TableCell className={styles.descriptionCell}>
+                              {model.description || <span className={styles.mutedCell}>-</span>}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="links" className={styles.pageTabContent}>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('system_info.quick_links_title')}</CardTitle>
+              <CardDescription>{t('system_info.quick_links_desc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className={styles.quickLinks}>
+                <a
+                  href="https://github.com/router-for-me/CLIProxyAPI"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.linkCard}
+                >
+                  <div className={`${styles.linkIcon} ${styles.github}`}>
+                    <CodeIcon />
+                  </div>
+                  <div className={styles.linkContent}>
+                    <div className={styles.linkTitle}>
+                      {t('system_info.link_main_repo')}
+                      <ExternalLinkIcon />
+                    </div>
+                    <div className={styles.linkDesc}>{t('system_info.link_main_repo_desc')}</div>
+                  </div>
+                </a>
+
+                <a
+                  href="https://github.com/CuzTeam/CPAPro"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.linkCard}
+                >
+                  <div className={`${styles.linkIcon} ${styles.github}`}>
+                    <CodeIcon />
+                  </div>
+                  <div className={styles.linkContent}>
+                    <div className={styles.linkTitle}>
+                      {t('system_info.link_webui_repo')}
+                      <ExternalLinkIcon />
+                    </div>
+                    <div className={styles.linkDesc}>{t('system_info.link_webui_repo_desc')}</div>
+                  </div>
+                </a>
+
+                <a
+                  href="https://help.router-for.me/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.linkCard}
+                >
+                  <div className={`${styles.linkIcon} ${styles.docs}`}>
+                    <BookOpenIcon />
+                  </div>
+                  <div className={styles.linkContent}>
+                    <div className={styles.linkTitle}>
+                      {t('system_info.link_docs')}
+                      <ExternalLinkIcon />
+                    </div>
+                    <div className={styles.linkDesc}>{t('system_info.link_docs_desc')}</div>
+                  </div>
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog
         open={requestLogModalOpen}

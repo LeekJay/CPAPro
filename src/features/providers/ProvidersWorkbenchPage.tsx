@@ -1,16 +1,19 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { AlertCircleIcon, RefreshCwIcon, ServerOffIcon } from 'lucide-react';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
+import { LobeProviderIcon } from '@/components/common/LobeProviderIcon';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthStore, useNotificationStore } from '@/stores';
 import { useProviderRecentRequests } from '@/components/providers/hooks/useProviderRecentRequests';
 import { getOpenAIProviderRecentWindowStats } from '@/components/providers/utils';
 import type { OpenAIProviderConfig } from '@/types';
 import { ProviderHeaderCard } from './components/ProviderHeaderCard';
-import { ProviderCategoryList } from './components/ProviderCategoryList';
 import { ProviderResourcePanel } from './components/ProviderResourcePanel';
 import type { OpenAIPanelControls } from './components/ProviderResourcePanel';
 import type {
@@ -20,6 +23,7 @@ import type {
 import { ProviderSheet, type ProviderSheetHandle } from './sheets/ProviderSheet';
 import { useProviderWorkbench } from './useProviderWorkbench';
 import type { ProviderBrand, ProviderResource } from './types';
+import { PROVIDER_BRAND_ORDER } from './descriptors';
 import styles from './ProvidersWorkbenchPage.module.scss';
 
 type SheetMode = 'detail' | 'create' | 'edit';
@@ -61,8 +65,13 @@ const matchesFilter = (r: ProviderResource, normalized: string): boolean => {
   return haystack.some((v) => v.includes(normalized));
 };
 
+function isProviderBrand(value: string | null): value is ProviderBrand {
+  return Boolean(value && PROVIDER_BRAND_ORDER.includes(value as ProviderBrand));
+}
+
 export function ProvidersWorkbenchPage() {
   const { t, i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const connectionStatus = useAuthStore((s) => s.connectionStatus);
   const { showNotification, showConfirmation } = useNotificationStore();
 
@@ -70,7 +79,6 @@ export function ProvidersWorkbenchPage() {
   const isCurrentLayer = pageTransitionLayer ? pageTransitionLayer.status === 'current' : true;
 
   const workbench = useProviderWorkbench();
-  const [activeBrand, setActiveBrand] = useState<ProviderBrand>('gemini');
   const [filter, setFilter] = useState('');
   const [openaiSortBy, setOpenaiSortBy] = useState<OpenAISortBy>('name');
   const [openaiSortDir, setOpenaiSortDir] = useState<SortDir>('asc');
@@ -102,6 +110,8 @@ export function ProvidersWorkbenchPage() {
   const disableMutations = connectionStatus !== 'connected' || workbench.mutating;
 
   const groups = useMemo(() => workbench.snapshot?.groups ?? [], [workbench.snapshot]);
+  const activeBrandParam = searchParams.get('tab');
+  const activeBrand: ProviderBrand = isProviderBrand(activeBrandParam) ? activeBrandParam : 'gemini';
   const activeGroup =
     groups.find((g) => g.id === activeBrand) ?? groups[0] ?? null;
 
@@ -319,6 +329,43 @@ export function ProvidersWorkbenchPage() {
     closeSheet();
   }, [closeSheet, showNotification, t]);
 
+  const handleBrandSelect = useCallback(
+    (brand: ProviderBrand) => {
+      if (brand === activeBrand) return;
+
+      const isSwitching = sheetState.open && sheetState.brand !== brand;
+      const proceed = isSwitching && sheetRef.current
+        ? sheetRef.current.confirmDiscardIfDirty()
+        : Promise.resolve(true);
+
+      void proceed.then((ok) => {
+        if (!ok) return;
+
+        const nextParams = new URLSearchParams(searchParams);
+        if (brand === 'gemini') {
+          nextParams.delete('tab');
+        } else {
+          nextParams.set('tab', brand);
+        }
+        setSearchParams(nextParams, { replace: true });
+        setFilter('');
+        setOpenaiSelectedModels(new Set());
+        if (isSwitching) {
+          closeSheet();
+        }
+      });
+    },
+    [activeBrand, closeSheet, searchParams, setSearchParams, sheetState.brand, sheetState.open]
+  );
+
+  const handleBrandTabChange = useCallback(
+    (value: string) => {
+      if (!isProviderBrand(value)) return;
+      handleBrandSelect(value);
+    },
+    [handleBrandSelect]
+  );
+
   // 加载状态
   if (!workbench.snapshot && workbench.isPending) {
     return (
@@ -397,42 +444,50 @@ export function ProvidersWorkbenchPage() {
         onNew={openCreate}
       />
 
-      <div className={styles.layout}>
-        <ProviderCategoryList
-          groups={groups}
-          activeBrand={activeGroup.id}
-          onSelect={(brand) => {
-            const isSwitching = sheetState.open && sheetState.brand !== brand;
-            const proceed = isSwitching && sheetRef.current
-              ? sheetRef.current.confirmDiscardIfDirty()
-              : Promise.resolve(true);
-            void proceed.then((ok) => {
-              if (!ok) return;
-              setActiveBrand(brand);
-              setFilter('');
-              setOpenaiSelectedModels(new Set());
-              if (isSwitching) {
-                closeSheet();
-              }
-            });
-          }}
-        />
-        <ProviderResourcePanel
-          group={activeGroup}
-          filter={filter}
-          onFilterChange={setFilter}
-          filteredResources={visibleResources}
-          selectedId={sheetState.open ? sheetState.resource?.id ?? null : null}
-          disableMutations={disableMutations}
-          usageByProvider={usageByProvider}
-          openaiControls={openaiControls}
-          onView={openView}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-          onToggleDisabled={handleToggleDisabled}
-          onCreate={openCreate}
-        />
-      </div>
+      <Tabs value={activeGroup.id} onValueChange={handleBrandTabChange} className={styles.providerTabs}>
+        <TabsList variant="line" className={styles.providerTabsList}>
+          {groups.map((group) => {
+            const realResources = group.resources.filter((r) => !r.flags.isPlaceholder);
+            const total = realResources.length || (group.id === 'ampcode' ? 1 : 0);
+            const activeCount = realResources.filter((r) => !r.disabled).length;
+
+            return (
+              <TabsTrigger key={group.id} value={group.id} className={styles.providerTabTrigger}>
+                <LobeProviderIcon
+                  provider={group.id}
+                  size={18}
+                  className={styles.providerTabIcon}
+                  fallbackLabel={t(`providersPage.providerNames.${group.id}`)}
+                />
+                <span>{t(`providersPage.providerNames.${group.id}`)}</span>
+                <Badge variant={group.issue ? 'secondary' : 'outline'} className={styles.providerTabBadge}>
+                  {group.id === 'ampcode'
+                    ? (group.resources[0]?.disabled ? '0' : '1')
+                    : `${activeCount}/${total}`}
+                </Badge>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+
+        <TabsContent value={activeGroup.id} className={styles.providerTabContent}>
+          <ProviderResourcePanel
+            group={activeGroup}
+            filter={filter}
+            onFilterChange={setFilter}
+            filteredResources={visibleResources}
+            selectedId={sheetState.open ? sheetState.resource?.id ?? null : null}
+            disableMutations={disableMutations}
+            usageByProvider={usageByProvider}
+            openaiControls={openaiControls}
+            onView={openView}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            onToggleDisabled={handleToggleDisabled}
+            onCreate={openCreate}
+          />
+        </TabsContent>
+      </Tabs>
 
       <ProviderSheet
         ref={sheetRef}

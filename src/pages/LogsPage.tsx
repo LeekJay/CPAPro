@@ -45,6 +45,15 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import {
+  Field,
+  FieldContent,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -57,6 +66,7 @@ import {
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAuthStore, useConfigStore, useNotificationStore } from '@/stores';
@@ -669,10 +679,12 @@ export function LogsPage() {
         </div>
         <div className={styles.metricsGrid}>
           {logMetricItems.map((item) => (
-            <div key={item.label} className={styles.metricCard}>
-              <span className={styles.metricValue}>{item.value}</span>
-              <span className={styles.metricLabel}>{item.label}</span>
-            </div>
+            <Card key={item.label} className={styles.metricCard}>
+              <CardContent className={styles.metricCardContent}>
+                <span className={styles.metricValue}>{item.value}</span>
+                <span className={styles.metricLabel}>{item.label}</span>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -709,7 +721,11 @@ export function LogsPage() {
                   <RefreshCwIcon data-icon="inline-start" className={loading ? styles.spinIcon : undefined} />
                   {t('logs.refresh_button')}
                 </Button>
-                <div className={styles.inlineSwitch}>
+                <Field
+                  orientation="horizontal"
+                  className={styles.inlineSwitch}
+                  data-disabled={autoRefreshDisabled}
+                >
                   <Switch
                     id="logs-auto-refresh"
                     checked={autoRefresh}
@@ -717,11 +733,11 @@ export function LogsPage() {
                     disabled={autoRefreshDisabled}
                     size="sm"
                   />
-                  <label htmlFor="logs-auto-refresh">
+                  <FieldLabel htmlFor="logs-auto-refresh" className={styles.switchLabel}>
                     <TimerIcon />
                     {t('logs.auto_refresh')}
-                  </label>
-                </div>
+                  </FieldLabel>
+                </Field>
                 <Button
                   variant="outline"
                   size="sm"
@@ -777,7 +793,8 @@ export function LogsPage() {
 
               <div className={styles.filterSurface}>
                 <div className={styles.filterTopRow}>
-                  <div className={styles.searchWrapper}>
+                  <Field className={styles.searchWrapper}>
+                    <FieldLabel className="sr-only">{t('logs.search_placeholder')}</FieldLabel>
                     <Input
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
@@ -799,7 +816,7 @@ export function LogsPage() {
                         )
                       }
                     />
-                  </div>
+                  </Field>
 
                   <Button
                     type="button"
@@ -831,84 +848,106 @@ export function LogsPage() {
                 </div>
 
                 {structuredFiltersExpanded && (
-                  <div id={structuredFiltersPanelId} className={styles.structuredFilters}>
-                    <div className={styles.filterChipGroup}>
-                      <span className={styles.filterChipLabel}>{t('logs.filter_method')}</span>
-                      <div className={styles.filterChipList}>
+                  <FieldSet id={structuredFiltersPanelId} className={styles.structuredFilters}>
+                    <FieldLegend className="sr-only">{t('logs.filter_panel_title')}</FieldLegend>
+                    <FieldGroup className={styles.filterGroupStack}>
+                      <Field orientation="responsive" className={styles.filterField}>
+                        <FieldContent className={styles.filterFieldContent}>
+                          <FieldTitle>{t('logs.filter_method')}</FieldTitle>
+                        </FieldContent>
+                        <ToggleGroup
+                          type="multiple"
+                          value={filters.methodFilters}
+                          onValueChange={(value) =>
+                            filters.setMethodFilters(value as typeof filters.methodFilters)
+                          }
+                          variant="outline"
+                          size="sm"
+                          spacing={1}
+                          className={styles.filterToggleGroup}
+                        >
                         {HTTP_METHODS.map((method) => {
                           const active = filters.methodFilters.includes(method);
                           const count = filters.methodCounts[method] ?? 0;
                           return (
-                            <Button
+                            <ToggleGroupItem
                               key={method}
-                              type="button"
-                              variant={active ? 'secondary' : 'outline'}
-                              size="xs"
-                              className={styles.filterChip}
-                              onClick={() => filters.toggleMethodFilter(method)}
+                              value={method}
+                              className={styles.filterToggleItem}
                               disabled={count === 0 && !active}
-                              aria-pressed={active}
                             >
                               {method}
                               <Badge variant="outline">{count}</Badge>
-                            </Button>
+                            </ToggleGroupItem>
                           );
                         })}
-                      </div>
-                    </div>
+                        </ToggleGroup>
+                      </Field>
 
-                    <div className={styles.filterChipGroup}>
-                      <span className={styles.filterChipLabel}>{t('logs.filter_status')}</span>
-                      <div className={styles.filterChipList}>
+                      <Field orientation="responsive" className={styles.filterField}>
+                        <FieldContent className={styles.filterFieldContent}>
+                          <FieldTitle>{t('logs.filter_status')}</FieldTitle>
+                        </FieldContent>
+                        <ToggleGroup
+                          type="multiple"
+                          value={filters.statusFilters}
+                          onValueChange={(value) =>
+                            filters.setStatusFilters(value as typeof filters.statusFilters)
+                          }
+                          variant="outline"
+                          size="sm"
+                          spacing={1}
+                          className={styles.filterToggleGroup}
+                        >
                         {STATUS_GROUPS.map((statusGroup) => {
                           const active = filters.statusFilters.includes(statusGroup);
                           const count = filters.statusCounts[statusGroup] ?? 0;
                           return (
-                            <Button
+                            <ToggleGroupItem
                               key={statusGroup}
-                              type="button"
-                              variant={active ? 'secondary' : 'outline'}
-                              size="xs"
-                              className={styles.filterChip}
-                              onClick={() => filters.toggleStatusFilter(statusGroup)}
+                              value={statusGroup}
+                              className={styles.filterToggleItem}
                               disabled={count === 0 && !active}
-                              aria-pressed={active}
                             >
                               {t(`logs.filter_status_${statusGroup}`)}
                               <Badge variant="outline">{count}</Badge>
-                            </Button>
+                            </ToggleGroupItem>
                           );
                         })}
-                      </div>
-                    </div>
+                        </ToggleGroup>
+                      </Field>
 
-                    <div className={styles.filterChipGroup}>
-                      <span className={styles.filterChipLabel}>{t('logs.filter_path')}</span>
-                      <div className={styles.filterChipList}>
+                      <Field orientation="responsive" className={styles.filterField}>
+                        <FieldContent className={styles.filterFieldContent}>
+                          <FieldTitle>{t('logs.filter_path')}</FieldTitle>
+                        </FieldContent>
                         {filters.pathOptions.length === 0 ? (
-                          <span className={styles.filterChipHint}>{t('logs.filter_path_empty')}</span>
+                          <div className={styles.filterChipHint}>{t('logs.filter_path_empty')}</div>
                         ) : (
-                          filters.pathOptions.map(({ path, count }) => {
-                            const active = filters.pathFilters.includes(path);
-                            return (
-                              <Button
+                          <ToggleGroup
+                            type="multiple"
+                            value={filters.pathFilters}
+                            onValueChange={filters.setPathFilters}
+                            variant="outline"
+                            size="sm"
+                            spacing={1}
+                            className={styles.filterToggleGroup}
+                          >
+                            {filters.pathOptions.map(({ path, count }) => (
+                              <ToggleGroupItem
                                 key={path}
-                                type="button"
-                                variant={active ? 'secondary' : 'outline'}
-                                size="xs"
-                                className={cn(styles.filterChip, styles.pathFilterChip)}
-                                onClick={() => filters.togglePathFilter(path)}
-                                aria-pressed={active}
+                                value={path}
+                                className={cn(styles.filterToggleItem, styles.pathFilterToggleItem)}
                                 title={path}
                               >
                                 <span className={styles.filterChipText}>{path}</span>
                                 <Badge variant="outline">{count}</Badge>
-                              </Button>
-                            );
-                          })
+                              </ToggleGroupItem>
+                            ))}
+                          </ToggleGroup>
                         )}
-                      </div>
-                    </div>
+                      </Field>
+                    </FieldGroup>
 
                     <div className={styles.filterFooter}>
                       <Button
@@ -920,40 +959,41 @@ export function LogsPage() {
                         {t('logs.clear_filters')}
                       </Button>
                     </div>
-                  </div>
+                  </FieldSet>
                 )}
 
-                <div className={styles.switchGrid}>
-                  <div className={styles.switchRow}>
+                <FieldGroup className={styles.switchGrid}>
+                  <Field orientation="horizontal" className={styles.switchRow}>
                     <Switch
                       id="logs-hide-management"
                       checked={hideManagementLogs}
                       onCheckedChange={setHideManagementLogs}
                       size="sm"
                     />
-                    <label htmlFor="logs-hide-management">
+                    <FieldLabel htmlFor="logs-hide-management" className={styles.switchLabel}>
                       <EyeOffIcon />
                       {t('logs.hide_management_logs', { prefix: MANAGEMENT_API_PREFIX })}
-                    </label>
-                  </div>
-                  <div className={styles.switchRow}>
+                    </FieldLabel>
+                  </Field>
+                  <Field orientation="horizontal" className={styles.switchRow}>
                     <Switch
                       id="logs-show-raw"
                       checked={showRawLogs}
                       onCheckedChange={setShowRawLogs}
                       size="sm"
                     />
-                    <label
+                    <FieldLabel
                       htmlFor="logs-show-raw"
+                      className={styles.switchLabel}
                       title={t('logs.show_raw_logs_hint', {
                         defaultValue: 'Show original log text for easier multi-line copy',
                       })}
                     >
                       <Code2Icon />
                       {t('logs.show_raw_logs', { defaultValue: 'Show raw logs' })}
-                    </label>
-                  </div>
-                </div>
+                    </FieldLabel>
+                  </Field>
+                </FieldGroup>
               </div>
 
               {loading ? (

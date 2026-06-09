@@ -44,14 +44,15 @@
 }
 
 .metricCard {
+  min-width: 0;
+  gap: 0;
+}
+
+.metricCardContent {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: 0;
   padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card);
 }
 
 .metricValue {
@@ -136,9 +137,10 @@
 
 .filterSurface {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
-  gap: 10px;
-  padding: 10px;
+  gap: 12px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--background);
@@ -173,43 +175,46 @@
 .structuredFilters {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px;
+  gap: 10px;
+  padding: 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--card);
-  max-height: 112px;
+  min-height: 156px;
+  max-height: 220px;
   overflow: auto;
   overscroll-behavior: contain;
 }
 
-.filterChipGroup {
+.filterGroupStack {
+  gap: 10px;
+}
+
+.filterField {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 96px minmax(0, 1fr);
   align-items: start;
   gap: 10px;
 }
 
-.filterChipLabel {
-  color: var(--muted-foreground);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 24px;
+.filterFieldContent {
+  min-height: 28px;
+  justify-content: center;
 }
 
-.filterChipList {
+.filterToggleGroup {
   display: flex;
+  width: 100%;
   min-width: 0;
   align-items: center;
-  gap: 6px;
   flex-wrap: wrap;
 }
 
-.filterChip {
+.filterToggleItem {
   max-width: 100%;
 }
 
-.pathFilterChip {
+.pathFilterToggleItem {
   max-width: 360px;
 }
 
@@ -223,7 +228,7 @@
 .filterChipHint {
   color: var(--muted-foreground);
   font-size: 12px;
-  line-height: 26px;
+  line-height: 28px;
 }
 
 .filterFooter {
@@ -257,8 +262,7 @@
   padding: 0 9px;
 }
 
-.switchRow label,
-.inlineSwitch label {
+.switchLabel {
   display: inline-flex;
   min-width: 0;
   align-items: center;
@@ -269,8 +273,7 @@
   cursor: pointer;
 }
 
-.switchRow svg,
-.inlineSwitch svg {
+.switchLabel svg {
   width: 15px;
   height: 15px;
   flex: 0 0 auto;

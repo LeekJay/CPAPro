@@ -10,16 +10,6 @@
   box-sizing: border-box;
 }
 
-.layout {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: minmax(0, 1fr);
-
-  @media (min-width: 1280px) {
-    grid-template-columns: 240px minmax(0, 1fr);
-  }
-}
-
 .emptyPanel {
   min-height: 280px;
   display: grid;
@@ -73,9 +63,54 @@
   margin-top: 4px;
 }
 
+.providerTabs {
+  min-width: 0;
+}
+
+.providerTabsList {
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  justify-content: flex-start;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.providerTabTrigger {
+  flex: 0 0 auto;
+  min-width: 0;
+  gap: 8px;
+  padding-inline: 10px;
+}
+
+.providerTabIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.providerTabBadge {
+  margin-left: 2px;
+  min-width: 26px;
+  justify-content: center;
+}
+
+.providerTabContent {
+  min-width: 0;
+  outline: none;
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 16px;
     gap: 16px;
+  }
+
+  .providerTabsList {
+    width: 100%;
   }
 }

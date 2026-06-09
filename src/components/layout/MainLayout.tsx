@@ -229,6 +229,45 @@ export function MainLayout() {
   const navItems = useMemo(() => navGroups.flatMap((group) => group.items), [navGroups]);
   const navOrder = useMemo(() => navItems.map((item) => item.path), [navItems]);
   const currentItem = navItems.find((item) => matchesNavItem(location.pathname, item.path)) ?? navItems[0];
+  const breadcrumbDetail = useMemo(() => {
+    const normalizedPath = normalizePath(location.pathname);
+
+    if (normalizedPath === '/auth-files') {
+      const tab = new URLSearchParams(location.search).get('tab');
+      if (tab === 'oauth-excluded') return t('oauth_excluded.title');
+      if (tab === 'oauth-model-alias') return t('oauth_model_alias.title');
+      return null;
+    }
+
+    if (normalizedPath === '/ai-providers') {
+      const tab = new URLSearchParams(location.search).get('tab');
+      if (tab === 'codex') return t('providersPage.providerNames.codex');
+      if (tab === 'claude') return t('providersPage.providerNames.claude');
+      if (tab === 'vertex') return t('providersPage.providerNames.vertex');
+      if (tab === 'openaiCompatibility') {
+        return t('providersPage.providerNames.openaiCompatibility');
+      }
+      if (tab === 'ampcode') return t('providersPage.providerNames.ampcode');
+      return null;
+    }
+
+    if (normalizedPath.startsWith('/auth-files/oauth-excluded')) {
+      return t('oauth_excluded.title');
+    }
+
+    if (normalizedPath.startsWith('/auth-files/oauth-model-alias')) {
+      return t('oauth_model_alias.title');
+    }
+
+    if (normalizedPath === '/system') {
+      const tab = new URLSearchParams(location.search).get('tab');
+      if (tab === 'models') return t('system_info.models_title');
+      if (tab === 'links') return t('system_info.quick_links_title');
+      return null;
+    }
+
+    return null;
+  }, [location.pathname, location.search, t]);
 
   const getRouteOrder = useCallback(
     (pathname: string) => {
@@ -338,10 +377,26 @@ export function MainLayout() {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage className="max-w-[52vw] truncate sm:max-w-none">
-                  {currentItem?.label}
-                </BreadcrumbPage>
+                {breadcrumbDetail ? (
+                  <BreadcrumbLink href={`#${currentItem?.path ?? '/'}`}>
+                    {currentItem?.label}
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage className="max-w-[52vw] truncate sm:max-w-none">
+                    {currentItem?.label}
+                  </BreadcrumbPage>
+                )}
               </BreadcrumbItem>
+              {breadcrumbDetail ? (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="max-w-[52vw] truncate sm:max-w-none">
+                      {breadcrumbDetail}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              ) : null}
             </BreadcrumbList>
           </Breadcrumb>
 

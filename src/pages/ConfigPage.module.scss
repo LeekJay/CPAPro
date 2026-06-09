@@ -101,59 +101,264 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
-.skeletonHeader {
+.visualSkeleton {
+  min-height: 0;
+}
+
+.skeletonMobileNav {
+  display: none;
+
+  @include mobile {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding-bottom: 8px;
+  }
+}
+
+.skeletonMobileNavItem {
+  height: 38px;
+  border-radius: 8px;
+}
+
+.skeletonWorkspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 140px;
-  gap: 12px;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  min-width: 0;
+
+  @include mobile {
+    display: block;
+  }
+}
+
+.skeletonSidebar {
+  min-width: 0;
+  padding-right: 12px;
+  border-right: 1px solid var(--border);
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.skeletonNavList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.skeletonNavItem {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  height: 34px;
+  min-width: 0;
+  padding: 0 8px;
+  border-radius: 8px;
+}
+
+.skeletonNavLabel {
+  height: 14px;
+  min-width: 0;
+}
+
+.skeletonNavBadge {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border-radius: 999px;
+}
+
+.skeletonSections {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 12px;
+}
+
+.skeletonSectionHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--background);
+  background: transparent;
+
+  @include mobile {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-.skeletonTitle {
-  height: 20px;
-  max-width: 320px;
+.skeletonHeaderText {
+  min-width: 0;
 }
 
-.skeletonAction {
+.skeletonSectionTitle {
+  height: 18px;
+  width: min(240px, 60%);
+}
+
+.skeletonSectionDescription {
+  height: 13px;
+  width: min(520px, 76%);
+  margin-top: 8px;
+}
+
+.skeletonHeaderActions {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  @include mobile {
+    justify-content: stretch;
+  }
+}
+
+.skeletonButton {
+  width: 82px;
   height: 32px;
+  border-radius: 6px;
+
+  @include mobile {
+    flex: 1;
+  }
 }
 
-.skeletonGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 10px;
-}
-
-.skeletonPanel {
+.skeletonSubsection {
   display: flex;
-  min-height: 128px;
   flex-direction: column;
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
+  background: transparent;
+}
+
+.skeletonSubsectionTitle {
+  height: 15px;
+  width: min(180px, 42%);
+}
+
+.skeletonFieldGrid,
+.skeletonToggleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.skeletonField {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+}
+
+.skeletonFieldLabel {
+  height: 12px;
+}
+
+.skeletonFieldControl {
+  height: 34px;
+  width: 100%;
+}
+
+.skeletonFieldHint {
+  height: 12px;
+}
+
+.skeletonToggleField {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+}
+
+.skeletonToggleText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonSwitch {
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+}
+
+.sourceSkeleton {
+  min-height: 0;
+}
+
+.sourceSkeletonToolbar {
+  align-items: center;
+}
+
+.skeletonSearchInput {
+  width: 100%;
+  height: 34px;
+}
+
+.skeletonIconButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.skeletonEditor {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  width: 100%;
+  height: clamp(500px, 70vh, 1040px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+
+  @supports (height: 100dvh) {
+    height: clamp(500px, 70dvh, 1040px);
+  }
+}
+
+.skeletonGutter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 8px 14px 12px;
+  border-right: 1px solid var(--border);
   background: var(--card);
 }
 
-.skeletonLineWide {
-  height: 18px;
-  width: 70%;
+.skeletonGutterLine {
+  height: 12px;
 }
 
-.skeletonLine {
-  height: 14px;
-  width: 48%;
+.skeletonCode {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
 }
 
-.skeletonControl {
-  height: 34px;
-  width: 100%;
-  margin-top: auto;
+.skeletonCodeLine {
+  height: 12px;
 }
 
 .sourceWorkspace {

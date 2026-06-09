@@ -20,6 +20,9 @@ interface UseLogFiltersReturn {
   methodCounts: Partial<Record<HttpMethod, number>>;
   statusCounts: Partial<Record<StatusGroup, number>>;
   pathOptions: Array<{ path: string; count: number }>;
+  setMethodFilters: (methods: HttpMethod[]) => void;
+  setStatusFilters: (groups: StatusGroup[]) => void;
+  setPathFilters: (paths: string[]) => void;
   toggleMethodFilter: (method: HttpMethod) => void;
   toggleStatusFilter: (group: StatusGroup) => void;
   togglePathFilter: (path: string) => void;
@@ -122,6 +125,9 @@ export function useLogFilters(options: UseLogFiltersOptions): UseLogFiltersRetur
     methodCounts,
     statusCounts,
     pathOptions,
+    setMethodFilters,
+    setStatusFilters,
+    setPathFilters,
     toggleMethodFilter,
     toggleStatusFilter,
     togglePathFilter,

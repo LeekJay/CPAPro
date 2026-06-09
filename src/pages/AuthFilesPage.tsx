@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ChevronDownIcon,
   DownloadIcon,
@@ -53,7 +53,7 @@ import {
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -94,6 +94,12 @@ const easePower2In = (progress: number) => progress ** 3;
 const BATCH_BAR_BASE_TRANSFORM = 'translateX(-50%)';
 const BATCH_BAR_HIDDEN_TRANSFORM = 'translateX(-50%) translateY(56px)';
 const DEFAULT_REGULAR_PAGE_SIZE = 9;
+const AUTH_FILES_PAGE_TABS = ['files', 'oauth-excluded', 'oauth-model-alias'] as const;
+type AuthFilesPageTab = (typeof AUTH_FILES_PAGE_TABS)[number];
+
+function isAuthFilesPageTab(value: string | null): value is AuthFilesPageTab {
+  return Boolean(value && AUTH_FILES_PAGE_TABS.includes(value as AuthFilesPageTab));
+}
 
 export function AuthFilesPage() {
   const { t } = useTranslation();
@@ -102,6 +108,9 @@ export function AuthFilesPage() {
   const pageTransitionLayer = usePageTransitionLayer();
   const isCurrentLayer = pageTransitionLayer ? pageTransitionLayer.status === 'current' : true;
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageTabParam = searchParams.get('tab');
+  const activePageTab: AuthFilesPageTab = isAuthFilesPageTab(pageTabParam) ? pageTabParam : 'files';
 
   const [filter, setFilter] = useState<'all' | string>('all');
   const [page, setPage] = useState(1);
@@ -230,6 +239,21 @@ export function AuthFilesPage() {
   const handleAccountCompleted = useCallback(() => {
     void loadFiles().catch(() => {});
   }, [loadFiles]);
+
+  const handlePageTabChange = useCallback(
+    (value: string) => {
+      if (!isAuthFilesPageTab(value)) return;
+
+      const nextParams = new URLSearchParams(searchParams);
+      if (value === 'files') {
+        nextParams.delete('tab');
+      } else {
+        nextParams.set('tab', value);
+      }
+      setSearchParams(nextParams, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
 
   useHeaderRefresh(handleHeaderRefresh);
 
@@ -686,165 +710,179 @@ export function AuthFilesPage() {
         <p className={styles.description}>{t('auth_files.description')}</p>
       </div>
 
-      <Card className={styles.filesPanel}>
-        <CardHeader className={styles.filesPanelHeader}>
-          <CardTitle>{titleNode}</CardTitle>
-          <CardAction className={styles.filesPanelActions}>
-            <div className={styles.headerActions}>
-              <Button variant="secondary" size="sm" onClick={handleHeaderRefresh} disabled={loading}>
-                {t('common.refresh')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleUploadClick}
-                disabled={disableControls || uploading}
-                loading={uploading}
-              >
-                {t('auth_files.upload_button')}
-              </Button>
-              <ButtonGroup
-                className={styles.accountButtonGroup}
-                aria-label={t('auth_files.add_account_button')}
-              >
-                <Button size="sm" onClick={() => handleAccountChannelSelect(accountChannel)} disabled={disableControls}>
-                  <PlusIcon data-icon="inline-start" />
-                  {t('auth_files.add_account_button')}
-                </Button>
-                <ButtonGroupSeparator />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="sm"
-                      aria-label={t('auth_files.add_account_channel_button')}
-                      disabled={disableControls}
-                    >
-                      <ChevronDownIcon data-icon="inline-start" />
+      <Tabs value={activePageTab} onValueChange={handlePageTabChange} className={styles.pageTabs}>
+        <TabsList variant="line" className={styles.pageTabsList}>
+          <TabsTrigger value="files">{t('auth_files.title_section')}</TabsTrigger>
+          <TabsTrigger value="oauth-excluded">{t('oauth_excluded.title')}</TabsTrigger>
+          <TabsTrigger value="oauth-model-alias">{t('oauth_model_alias.title')}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="files" className={styles.pageTabContent}>
+          <Card className={styles.filesPanel}>
+            <CardHeader className={styles.filesPanelHeader}>
+              <CardTitle>{titleNode}</CardTitle>
+              <CardAction className={styles.filesPanelActions}>
+                <div className={styles.headerActions}>
+                  <Button variant="secondary" size="sm" onClick={handleHeaderRefresh} disabled={loading}>
+                    {t('common.refresh')}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleUploadClick}
+                    disabled={disableControls || uploading}
+                    loading={uploading}
+                  >
+                    {t('auth_files.upload_button')}
+                  </Button>
+                  <ButtonGroup
+                    className={styles.accountButtonGroup}
+                    aria-label={t('auth_files.add_account_button')}
+                  >
+                    <Button size="sm" onClick={() => handleAccountChannelSelect(accountChannel)} disabled={disableControls}>
+                      <PlusIcon data-icon="inline-start" />
+                      {t('auth_files.add_account_button')}
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className={styles.accountChannelMenu}>
-                    <DropdownMenuLabel>
-                      {t('auth_files.add_account_button', { defaultValue: '添加账号' })}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      {AUTH_ACCOUNT_CHANNELS.map((channel) => (
-                        <DropdownMenuItem
-                          key={channel.id}
-                          onSelect={() => handleAccountChannelSelect(channel.id)}
+                    <ButtonGroupSeparator />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          aria-label={t('auth_files.add_account_channel_button')}
+                          disabled={disableControls}
                         >
-                          <LobeProviderIcon
-                            provider={channel.id}
-                            className={styles.accountChannelIcon}
-                            fallbackLabel={t(channel.titleKey)}
-                          />
-                          <span>{t(channel.titleKey)}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </ButtonGroup>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() =>
-                  handleDeleteAll({
-                    filter,
-                    problemOnly: false,
-                    disabledOnly: false,
-                    onResetFilterToAll: () => setFilter('all'),
-                    onResetProblemOnly: () => {},
-                    onResetDisabledOnly: () => {},
-                  })
-                }
-                disabled={disableControls || loading || deletingAll}
-                loading={deletingAll}
-              >
-                {deleteAllButtonLabel}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json,application/json"
-                multiple
-                style={{ display: 'none' }}
-                onChange={handleFileChange}
-              />
-            </div>
-          </CardAction>
-        </CardHeader>
-
-        <CardContent className={styles.filesPanelContent}>
-        <div className={styles.filterSection}>
-          {renderProviderTabs()}
-
-          <div className={styles.filterContent}>
-            {loading ? (
-              renderFilesSkeleton()
-            ) : pageItems.length === 0 ? (
-              renderEmptyState()
-            ) : (
-              renderFilesTable()
-            )}
-
-            {!loading && sorted.length > pageSize && (
-              <div className={styles.pagination}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage <= 1}
-                >
-                  {t('auth_files.pagination_prev')}
-                </Button>
-                <div className={styles.pageInfo}>
-                  {t('auth_files.pagination_info', {
-                    current: currentPage,
-                    total: totalPages,
-                    count: sorted.length,
-                  })}
+                          <ChevronDownIcon data-icon="inline-start" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className={styles.accountChannelMenu}>
+                        <DropdownMenuLabel>
+                          {t('auth_files.add_account_button', { defaultValue: '添加账号' })}
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                          {AUTH_ACCOUNT_CHANNELS.map((channel) => (
+                            <DropdownMenuItem
+                              key={channel.id}
+                              onSelect={() => handleAccountChannelSelect(channel.id)}
+                            >
+                              <LobeProviderIcon
+                                provider={channel.id}
+                                className={styles.accountChannelIcon}
+                                fallbackLabel={t(channel.titleKey)}
+                              />
+                              <span>{t(channel.titleKey)}</span>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </ButtonGroup>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() =>
+                      handleDeleteAll({
+                        filter,
+                        problemOnly: false,
+                        disabledOnly: false,
+                        onResetFilterToAll: () => setFilter('all'),
+                        onResetProblemOnly: () => {},
+                        onResetDisabledOnly: () => {},
+                      })
+                    }
+                    disabled={disableControls || loading || deletingAll}
+                    loading={deletingAll}
+                  >
+                    {deleteAllButtonLabel}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json,application/json"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange}
+                  />
                 </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage >= totalPages}
-                >
-                  {t('auth_files.pagination_next')}
-                </Button>
+              </CardAction>
+            </CardHeader>
+
+            <CardContent className={styles.filesPanelContent}>
+              <div className={styles.filterSection}>
+                {renderProviderTabs()}
+
+                <div className={styles.filterContent}>
+                  {loading ? (
+                    renderFilesSkeleton()
+                  ) : pageItems.length === 0 ? (
+                    renderEmptyState()
+                  ) : (
+                    renderFilesTable()
+                  )}
+
+                  {!loading && sorted.length > pageSize && (
+                    <div className={styles.pagination}>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage <= 1}
+                      >
+                        {t('auth_files.pagination_prev')}
+                      </Button>
+                      <div className={styles.pageInfo}>
+                        {t('auth_files.pagination_info', {
+                          current: currentPage,
+                          total: totalPages,
+                          count: sorted.length,
+                        })}
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage >= totalPages}
+                      >
+                        {t('auth_files.pagination_next')}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      <OAuthExcludedCard
-        disableControls={disableControls}
-        excludedError={excludedError}
-        excluded={excluded}
-        onAdd={() => openExcludedEditor()}
-        onEdit={openExcludedEditor}
-        onDelete={deleteExcluded}
-      />
+        <TabsContent value="oauth-excluded" className={styles.pageTabContent}>
+          <OAuthExcludedCard
+            disableControls={disableControls}
+            excludedError={excludedError}
+            excluded={excluded}
+            onAdd={() => openExcludedEditor()}
+            onEdit={openExcludedEditor}
+            onDelete={deleteExcluded}
+          />
+        </TabsContent>
 
-      <OAuthModelAliasCard
-        disableControls={disableControls}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onAdd={() => openModelAliasEditor()}
-        onEditProvider={openModelAliasEditor}
-        onDeleteProvider={deleteModelAlias}
-        modelAliasError={modelAliasError}
-        modelAlias={modelAlias}
-        allProviderModels={allProviderModels}
-        onUpdate={handleMappingUpdate}
-        onDeleteLink={handleDeleteLink}
-        onToggleFork={handleToggleFork}
-        onRenameAlias={handleRenameAlias}
-        onDeleteAlias={handleDeleteAlias}
-      />
+        <TabsContent value="oauth-model-alias" className={styles.pageTabContent}>
+          <OAuthModelAliasCard
+            disableControls={disableControls}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onAdd={() => openModelAliasEditor()}
+            onEditProvider={openModelAliasEditor}
+            onDeleteProvider={deleteModelAlias}
+            modelAliasError={modelAliasError}
+            modelAlias={modelAlias}
+            allProviderModels={allProviderModels}
+            onUpdate={handleMappingUpdate}
+            onDeleteLink={handleDeleteLink}
+            onToggleFork={handleToggleFork}
+            onRenameAlias={handleRenameAlias}
+            onDeleteAlias={handleDeleteAlias}
+          />
+        </TabsContent>
+      </Tabs>
 
       <AuthFileAccountAddDialog
         open={accountDialogOpen}

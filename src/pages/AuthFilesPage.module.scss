@@ -29,6 +29,37 @@
   margin: 0;
 }
 
+.pageTabs {
+  min-width: 0;
+}
+
+.pageTabsList {
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  justify-content: flex-start;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.pageTabContent {
+  min-width: 0;
+  outline: none;
+}
+
+@include mobile {
+  .pageTabsList {
+    width: 100%;
+  }
+
+  .pageTabsList :global([data-slot='tabs-trigger']) {
+    flex: 0 0 auto;
+  }
+}
+
 .headerActions {
   display: flex;
   gap: 8px;

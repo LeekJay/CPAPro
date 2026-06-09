@@ -1,7 +1,7 @@
 {
   "name": "cpapro",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "CPAPro, a modern CLIProxyAPI panel.",
   "license": "AGPL-3.0-only",
   "type": "module",

@@ -491,20 +491,108 @@ export function ConfigPage() {
     ]
   );
 
-  const configSkeleton = (
-    <div className={styles.configSkeleton} aria-label={t('config_management.status_loading')}>
-      <div className={styles.skeletonHeader}>
-        <Skeleton className={styles.skeletonTitle} />
-        <Skeleton className={styles.skeletonAction} />
-      </div>
-      <div className={styles.skeletonGrid}>
-        {Array.from({ length: 6 }, (_, index) => (
-          <div key={index} className={styles.skeletonPanel}>
-            <Skeleton className={styles.skeletonLineWide} />
-            <Skeleton className={styles.skeletonLine} />
-            <Skeleton className={styles.skeletonControl} />
-          </div>
+  const sourceCodeLineWidths = ['86%', '54%', '72%', '42%', '64%', '78%', '36%', '58%'];
+
+  const sourceEditorSkeleton = (
+    <div className={styles.skeletonEditor} aria-hidden="true">
+      <div className={styles.skeletonGutter}>
+        {Array.from({ length: 16 }, (_, index) => (
+          <Skeleton key={index} className={styles.skeletonGutterLine} width={index < 9 ? '18px' : '24px'} />
         ))}
+      </div>
+      <div className={styles.skeletonCode}>
+        {Array.from({ length: 16 }, (_, index) => (
+          <Skeleton
+            key={index}
+            className={styles.skeletonCodeLine}
+            width={sourceCodeLineWidths[index % sourceCodeLineWidths.length]}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
+  const sourceConfigSkeleton = (
+    <div
+      className={`${styles.sourceWorkspace} ${styles.sourceSkeleton}`}
+      aria-label={t('config_management.status_loading')}
+    >
+      <div className={`${styles.sourceToolbar} ${styles.sourceSkeletonToolbar}`}>
+        <Skeleton className={styles.skeletonSearchInput} />
+        <div className={styles.searchActions}>
+          <Skeleton className={styles.skeletonIconButton} />
+          <Skeleton className={styles.skeletonIconButton} />
+        </div>
+        <div className={styles.sourcePageActions}>
+          <Skeleton className={styles.skeletonButton} />
+          <Skeleton className={styles.skeletonButton} />
+        </div>
+      </div>
+      {sourceEditorSkeleton}
+    </div>
+  );
+
+  const visualConfigSkeleton = (
+    <div
+      className={`${styles.configSkeleton} ${styles.visualSkeleton}`}
+      aria-label={t('config_management.status_loading')}
+    >
+      <div className={styles.skeletonMobileNav}>
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton key={index} className={styles.skeletonMobileNavItem} />
+        ))}
+      </div>
+      <div className={styles.skeletonWorkspace}>
+        <aside className={styles.skeletonSidebar}>
+          <div className={styles.skeletonNavList}>
+            {Array.from({ length: 7 }, (_, index) => (
+              <div key={index} className={styles.skeletonNavItem}>
+                <Skeleton className={styles.skeletonNavLabel} width={index % 3 === 0 ? '58%' : '72%'} />
+                {index < 3 ? <Skeleton className={styles.skeletonNavBadge} /> : null}
+              </div>
+            ))}
+          </div>
+        </aside>
+        <div className={styles.skeletonSections}>
+          <div className={styles.skeletonSectionHeader}>
+            <div className={styles.skeletonHeaderText}>
+              <Skeleton className={styles.skeletonSectionTitle} />
+              <Skeleton className={styles.skeletonSectionDescription} />
+            </div>
+            <div className={styles.skeletonHeaderActions}>
+              <Skeleton className={styles.skeletonButton} />
+              <Skeleton className={styles.skeletonButton} />
+            </div>
+          </div>
+
+          <div className={styles.skeletonSubsection}>
+            <Skeleton className={styles.skeletonSubsectionTitle} />
+            <div className={styles.skeletonFieldGrid}>
+              {Array.from({ length: 6 }, (_, index) => (
+                <div key={index} className={styles.skeletonField}>
+                  <Skeleton className={styles.skeletonFieldLabel} width={index % 2 === 0 ? '46%' : '34%'} />
+                  <Skeleton className={styles.skeletonFieldControl} />
+                  <Skeleton className={styles.skeletonFieldHint} width={index % 3 === 0 ? '68%' : '52%'} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.skeletonSubsection}>
+            <Skeleton className={styles.skeletonSubsectionTitle} />
+            <div className={styles.skeletonToggleGrid}>
+              {Array.from({ length: 4 }, (_, index) => (
+                <div key={index} className={styles.skeletonToggleField}>
+                  <div className={styles.skeletonToggleText}>
+                    <Skeleton className={styles.skeletonFieldLabel} width={index % 2 === 0 ? '54%' : '42%'} />
+                    <Skeleton className={styles.skeletonFieldHint} width={index % 2 === 0 ? '78%' : '64%'} />
+                  </div>
+                  <Skeleton className={styles.skeletonSwitch} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -546,7 +634,7 @@ export function ConfigPage() {
           <CardContent className={styles.content}>
             <TabsContent value="visual" className={styles.tabContent}>
               {loading ? (
-                configSkeleton
+                visualConfigSkeleton
               ) : (
                 <VisualConfigEditor
                   activeSectionId={activeVisualSection}
@@ -562,7 +650,7 @@ export function ConfigPage() {
 
             <TabsContent value="source" className={styles.tabContent}>
               {loading ? (
-                configSkeleton
+                sourceConfigSkeleton
               ) : (
                 <div className={styles.sourceWorkspace}>
                 <div className={styles.sourceToolbar}>
@@ -634,7 +722,7 @@ export function ConfigPage() {
                 </div>
 
                 <div className={styles.editorWrapper}>
-                  <Suspense fallback={configSkeleton}>
+                  <Suspense fallback={sourceEditorSkeleton}>
                     <LazyConfigSourceEditor
                       editorRef={editorRef}
                       value={content}
