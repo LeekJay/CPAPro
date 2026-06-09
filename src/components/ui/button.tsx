@@ -63,6 +63,18 @@ function Button({
     loading?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
+  const loader = loading ? (
+    <LoaderCircleIcon data-icon="inline-start" className="animate-spin" />
+  ) : null
+  const slottedChildren =
+    asChild && loader && React.isValidElement(children)
+      ? React.cloneElement(
+          children,
+          undefined,
+          loader,
+          (children.props as { children?: React.ReactNode }).children
+        )
+      : children
 
   return (
     <Comp
@@ -73,8 +85,14 @@ function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {loading && <LoaderCircleIcon data-icon="inline-start" className="animate-spin" />}
-      {children}
+      {asChild ? (
+        slottedChildren
+      ) : (
+        <>
+          {loader}
+          {children}
+        </>
+      )}
     </Comp>
   )
 }
