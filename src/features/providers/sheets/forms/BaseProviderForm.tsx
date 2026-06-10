@@ -66,6 +66,7 @@ const emptyApiKeyEntry = (): ApiKeyEntryInput => ({
   apiKey: '',
   proxyUrl: '',
 });
+const AUTO_TEST_MODEL_VALUE = '__auto__';
 
 const stripDisableAllRule = (list?: string[]): string[] =>
   (list ?? []).filter((s) => s.trim() !== '*');
@@ -309,7 +310,9 @@ export function BaseProviderForm({
     const autoLabel = firstName
       ? t('providersPage.form.testModelAutoWith', { name: firstName })
       : t('providersPage.form.testModelAutoEmpty');
-    const opts: Array<{ value: string; label: string }> = [{ value: '', label: autoLabel }];
+    const opts: Array<{ value: string; label: string }> = [
+      { value: AUTO_TEST_MODEL_VALUE, label: autoLabel },
+    ];
     names.forEach((n) => opts.push({ value: n, label: n }));
     const tm = (form.testModel ?? '').trim();
     if (tm && !seen.has(tm)) {
@@ -320,6 +323,8 @@ export function BaseProviderForm({
     }
     return opts;
   }, [form.models, form.testModel, t]);
+
+  const testModelValue = form.testModel?.trim() ? form.testModel : AUTO_TEST_MODEL_VALUE;
 
   const openDiscovery = () => {
     setDiscoveryOpen(true);
@@ -606,9 +611,11 @@ export function BaseProviderForm({
             </FieldLabel>
             <OptionSelect
               id={`${fid}-testModel`}
-              value={form.testModel ?? ''}
+              value={testModelValue}
               options={testModelOptions}
-              onChange={(value) => updateField('testModel', value)}
+              onChange={(value) =>
+                updateField('testModel', value === AUTO_TEST_MODEL_VALUE ? '' : value)
+              }
               disabled={mutating}
               ariaLabel={t('providersPage.form.testModel')}
             />

@@ -61,7 +61,7 @@ const PROVIDER_ICON_MAP: Record<string, MonoIconComponent> = {
   'x-ai': XAIIcon,
 };
 
-export interface LobeProviderIconProps {
+interface LobeProviderIconProps {
   className?: string;
   fallbackLabel?: string;
   provider?: string | null;
@@ -70,15 +70,11 @@ export interface LobeProviderIconProps {
   title?: string;
 }
 
-export const normalizeLobeProviderKey = (value?: string | null) =>
+const normalizeLobeProviderKey = (value?: string | null) =>
   String(value ?? '')
     .trim()
     .toLowerCase()
     .replace(/[\s_]+/g, '-');
-
-export function hasLobeProviderIcon(provider?: string | null): boolean {
-  return Boolean(PROVIDER_ICON_MAP[normalizeLobeProviderKey(provider)]);
-}
 
 export function LobeProviderIcon({
   className,

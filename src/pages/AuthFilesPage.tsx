@@ -112,13 +112,23 @@ export function AuthFilesPage() {
   const pageTabParam = searchParams.get('tab');
   const activePageTab: AuthFilesPageTab = isAuthFilesPageTab(pageTabParam) ? pageTabParam : 'files';
 
-  const [filter, setFilter] = useState<'all' | string>('all');
-  const [page, setPage] = useState(1);
+  const [initialUiState] = useState(() => readAuthFilesUiState());
+  const [filter, setFilter] = useState<'all' | string>(() => {
+    const persistedFilter = initialUiState?.filter;
+    return typeof persistedFilter === 'string' && persistedFilter.trim()
+      ? normalizeProviderKey(persistedFilter)
+      : 'all';
+  });
+  const [page, setPage] = useState(() => {
+    const persistedPage = initialUiState?.page;
+    return typeof persistedPage === 'number' && Number.isFinite(persistedPage)
+      ? Math.max(1, Math.round(persistedPage))
+      : 1;
+  });
   const [viewMode, setViewMode] = useState<'diagram' | 'list'>('list');
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
   const [accountChannel, setAccountChannel] = useState<AuthAccountChannel>('codex');
   const [batchActionBarVisible, setBatchActionBarVisible] = useState(false);
-  const [uiStateHydrated, setUiStateHydrated] = useState(false);
   const floatingBatchActionsRef = useRef<HTMLDivElement>(null);
   const batchActionAnimationRef = useRef<AnimationPlaybackControlsWithThen | null>(null);
   const previousSelectionCountRef = useRef(0);
@@ -199,33 +209,12 @@ export function AuthFilesPage() {
   const pageSize = DEFAULT_REGULAR_PAGE_SIZE;
 
   useEffect(() => {
-    const persisted = readAuthFilesUiState();
-    if (persisted) {
-      if (typeof persisted.filter === 'string' && persisted.filter.trim()) {
-        setFilter(normalizeProviderKey(persisted.filter));
-      }
-      if (typeof persisted.page === 'number' && Number.isFinite(persisted.page)) {
-        setPage(Math.max(1, Math.round(persisted.page)));
-      }
-    }
-
-    setUiStateHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!uiStateHydrated) return;
-
     writeAuthFilesUiState({
       filter,
       page,
       pageSize,
     });
-  }, [
-    filter,
-    page,
-    pageSize,
-    uiStateHydrated,
-  ]);
+  }, [filter, page, pageSize]);
 
   const handleHeaderRefresh = useCallback(async () => {
     await Promise.all([loadFiles(), loadExcluded(), loadModelAlias()]);
@@ -346,6 +335,59 @@ export function AuthFilesPage() {
     batchStatusUpdating ||
     selectedHasStatusUpdating;
 
+  const showBatchActionBar = useCallback(() => {
+    setBatchActionBarVisible(true);
+  }, []);
+
+  const handleToggleAllPageItems = useCallback(() => {
+    if (allPageItemsSelected) {
+      invertVisibleSelection(selectablePageItems);
+      return;
+    }
+    showBatchActionBar();
+    selectAllVisible(pageItems);
+  }, [
+    allPageItemsSelected,
+    invertVisibleSelection,
+    pageItems,
+    selectablePageItems,
+    selectAllVisible,
+    showBatchActionBar,
+  ]);
+
+  const handleToggleFileSelection = useCallback(
+    (name: string) => {
+      if (!selectedFiles.has(name)) {
+        showBatchActionBar();
+      }
+      toggleSelect(name);
+    },
+    [selectedFiles, showBatchActionBar, toggleSelect]
+  );
+
+  const handleSelectPageItems = useCallback(() => {
+    showBatchActionBar();
+    selectAllVisible(pageItems);
+  }, [pageItems, selectAllVisible, showBatchActionBar]);
+
+  const handleSelectFilteredItems = useCallback(() => {
+    showBatchActionBar();
+    selectAllVisible(sorted);
+  }, [selectAllVisible, showBatchActionBar, sorted]);
+
+  const handleInvertPageSelection = useCallback(() => {
+    if (selectablePageItems.some((file) => !selectedFiles.has(file.name))) {
+      showBatchActionBar();
+    }
+    invertVisibleSelection(pageItems);
+  }, [
+    invertVisibleSelection,
+    pageItems,
+    selectablePageItems,
+    selectedFiles,
+    showBatchActionBar,
+  ]);
+
   const copyTextWithNotification = useCallback(
     async (text: string) => {
       const copied = await copyToClipboard(text);
@@ -418,9 +460,6 @@ export function AuthFilesPage() {
 
   useEffect(() => {
     selectionCountRef.current = selectionCount;
-    if (selectionCount > 0) {
-      setBatchActionBarVisible(true);
-    }
   }, [selectionCount]);
 
   useLayoutEffect(() => {
@@ -520,13 +559,7 @@ export function AuthFilesPage() {
                     ? t('auth_files.batch_deselect')
                     : t('auth_files.batch_select_page')
                 }
-                onCheckedChange={() => {
-                  if (allPageItemsSelected) {
-                    invertVisibleSelection(selectablePageItems);
-                    return;
-                  }
-                  selectAllVisible(pageItems);
-                }}
+                onCheckedChange={handleToggleAllPageItems}
               />
             </TableHead>
             <TableHead className={styles.providerIconHead}>
@@ -563,7 +596,7 @@ export function AuthFilesPage() {
                           ? t('auth_files.batch_deselect')
                           : t('auth_files.batch_select_all')
                       }
-                      onCheckedChange={() => toggleSelect(file.name)}
+                      onCheckedChange={() => handleToggleFileSelection(file.name)}
                     />
                   )}
                 </TableCell>
@@ -925,7 +958,7 @@ export function AuthFilesPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => selectAllVisible(pageItems)}
+                    onClick={handleSelectPageItems}
                     disabled={selectablePageItems.length === 0}
                   >
                     {t('auth_files.batch_select_page')}
@@ -933,7 +966,7 @@ export function AuthFilesPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => selectAllVisible(sorted)}
+                    onClick={handleSelectFilteredItems}
                     disabled={selectableFilteredItems.length === 0}
                   >
                     {t('auth_files.batch_select_filtered')}
@@ -941,7 +974,7 @@ export function AuthFilesPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => invertVisibleSelection(pageItems)}
+                    onClick={handleInvertPageSelection}
                     disabled={selectablePageItems.length === 0}
                   >
                     {t('auth_files.batch_invert_page')}

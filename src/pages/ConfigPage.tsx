@@ -202,7 +202,7 @@ export function ConfigPage() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (activeTab === 'visual' && visualParseError) {
       showNotification(t('config_management.visual_mode_save_blocked'), 'error');
       return;
@@ -276,7 +276,16 @@ export function ConfigPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [
+    activeTab,
+    applyVisualChangesToYaml,
+    content,
+    dirty,
+    loadVisualValuesFromYaml,
+    showNotification,
+    t,
+    visualParseError,
+  ]);
 
   const handleChange = useCallback((value: string) => {
     setContent(value);

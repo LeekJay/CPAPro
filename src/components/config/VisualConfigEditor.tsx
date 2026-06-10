@@ -18,7 +18,7 @@ import {
   TimerIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button-variants';
 import {
   Field,
   FieldDescription,
